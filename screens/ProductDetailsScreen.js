@@ -1,13 +1,17 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, Image, View, ImageBackground, TextInput  } from 'react-native';
+import { StyleSheet, Text, Image, View, ImageBackground, TextInput, TouchableOpacity  } from 'react-native';
 import { Container, Header, Content } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 
 class ProductDetailsScreen extends Component {
+	
+	onPressOpen=(screenName)=>{
+		this.props.navigation.navigate(screenName);
+	}
   render() {
     return (
       <Container>
-			<Header />
+			
 			<Content style={styles.maincontent}>
 				<Grid>
 					<Row>
@@ -55,8 +59,10 @@ class ProductDetailsScreen extends Component {
 						<Col>
 								<TextInput style={styles.textinput}/>
 						</Col>
-						<Col >
+						<Col style={{textAlign:'right'}}>
+							<TouchableOpacity onPress={()=>this.onPressOpen('CartConfirm')}>
 								<Image source={require('../assets/images/ProductDetailsScreen/plus.png')} style={styles.productImage}/>
+							</TouchableOpacity>
 						</Col>
 						
 					</Row>

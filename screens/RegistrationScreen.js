@@ -2,19 +2,8 @@ import React, { Component } from 'react';
 import { StyleSheet, Text, Image, View, ImageBackground  } from 'react-native';
 import { Container, Header, Content } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
-import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
 
-class HomeScreen extends Component {
-	constructor(props){
-		super();
-	}
-	
-	componentDidMount(){
-		setTimeout(function(){
-			this.props.navigation.navigate('CategoryScreen');
-		},4000);
-	}
+class RegistrationScreen extends Component {
   render() {
     return (
       <Container>
@@ -41,4 +30,4 @@ const styles = StyleSheet.create({
 	  }
 });
 
-export default HomeScreen;
+export default RegistrationScreen;

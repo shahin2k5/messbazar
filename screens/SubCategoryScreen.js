@@ -1,13 +1,18 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, Image, View, ImageBackground  } from 'react-native';
+import { StyleSheet, Text, Image, View, ImageBackground, TouchableOpacity  } from 'react-native';
 import { Container, Header, Content } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 
 class SubCategoryScreen extends Component {
+	
+	  onPressOpen=(screenName)=>{
+		  this.props.navigation.navigate(screenName);
+	  }
+  
   render() {
     return (
       <Container>
-			<Header />
+			 
 			<Content>
 				<Grid>
 					<Row>
@@ -29,10 +34,12 @@ class SubCategoryScreen extends Component {
 					
 					<Row>
 						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/rondhon-icon.png')} style={styles.btnText}/>
-								<Image source={require('../assets/images/CategoryScreen/rondhon.png')} style={styles.btnText}/>
-							</ImageBackground>
+							<TouchableOpacity style={styles.button} onPress={()=>this.onPressOpen('ProductList')} >
+								<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
+									<Image source={require('../assets/images/CategoryScreen/rondhon-icon.png')} style={styles.btnText}/>
+									<Image source={require('../assets/images/CategoryScreen/rondhon.png')} style={styles.btnText}/>
+								</ImageBackground>
+							</TouchableOpacity>
 						</Col>
 						<Col>
 							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
