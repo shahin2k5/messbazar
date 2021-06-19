@@ -43,6 +43,7 @@ import LoginScreen from './screens/LoginScreen'
 import UserAccountScreen from './screens/UserAccountScreen'
 import MainUserRegistrationScreen from './screens/MainUserRegistrationScreen'
 import MemberUserRegistrationScreen from './screens/MemberUserRegistrationScreen'
+import HomeContainer from './containers/HomeContainer';
 
 const Drawer = createDrawerNavigator();
 
@@ -61,28 +62,30 @@ class App extends React.Component {
 
 
   return (
-    <NavigationContainer>
-		  <Drawer.Navigator>
-			<Drawer.Screen name="Home" component={HomeScreen} />
-			<Drawer.Screen name="প্রোফাইল" component={LoginScreen} />
-			<Drawer.Screen name="লগ ইন" component={LoginScreen} />
-			<Drawer.Screen name="মেইন ইউজার রেজিষ্ট্রেশন" component={MainUserRegistrationScreen} />
-			<Drawer.Screen name="মেমবার ইউজার রেজিষ্ট্রেশন" component={MemberUserRegistrationScreen} />
-			<Drawer.Screen name="ইউজার একাউন্ট" component={UserAccountScreen} />
-			<Drawer.Screen name="কেটাগরি" component={CategoryScreen} />
-			<Drawer.Screen name="SubCategory" component={SubCategoryScreen} />
-			<Drawer.Screen name="ProductList" component={ProductListScreen} />
-			<Drawer.Screen name="বিজ্ঞপ্তি" component={ProductListScreen} />
-			<Drawer.Screen name="কুপন" component={ProductListScreen} />
-			<Drawer.Screen name="সেটিংস" component={ProductListScreen} />
-			
-			<Drawer.Screen name="ProductDetails" component={ProductDetailsScreen} />
-			<Drawer.Screen name="ShoppingCart" component={ShoppingCartScreen} />
-			<Drawer.Screen name="CartConfirm" component={CartConfirmScreen} />
+	
+		<NavigationContainer>
+			  <Drawer.Navigator>
+				<Drawer.Screen name="Home" component={HomeScreen} />
+				<Drawer.Screen name="প্রোফাইল" component={LoginScreen} />
+				<Drawer.Screen name="লগ ইন" component={LoginScreen} />
+				<Drawer.Screen name="মেইন ইউজার রেজিষ্ট্রেশন" component={MainUserRegistrationScreen} />
+				<Drawer.Screen name="মেমবার ইউজার রেজিষ্ট্রেশন" component={MemberUserRegistrationScreen} />
+				<Drawer.Screen name="ইউজার একাউন্ট" component={UserAccountScreen} />
+				<Drawer.Screen name="কেটাগরি" component={CategoryScreen} />
+				<Drawer.Screen name="SubCategory" component={SubCategoryScreen} />
+				<Drawer.Screen name="ProductList" component={ProductListScreen} />
+				<Drawer.Screen name="বিজ্ঞপ্তি" component={ProductListScreen} />
+				<Drawer.Screen name="কুপন" component={ProductListScreen} />
+				<Drawer.Screen name="সেটিংস" component={ProductListScreen} />
+				 
+				<Drawer.Screen name="ProductDetails" component={HomeContainer} />
+				<Drawer.Screen name="ShoppingCart" component={ShoppingCartScreen} />
+				<Drawer.Screen name="CartConfirm" component={CartConfirmScreen} />
 
-		  </Drawer.Navigator>
+			  </Drawer.Navigator>
 
-    </NavigationContainer>
+		</NavigationContainer>
+	 
   )}
 };
 
