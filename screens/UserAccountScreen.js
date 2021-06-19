@@ -23,10 +23,10 @@ class MainUserRegistrationScreen extends Component {
 					<ListItem>
 						<Row>
 							<Col>
-								<Button style={{backgroundColor:'lightgreen',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>Login</Text></Button>
+								<Button style={{backgroundColor:'lightgreen',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>লগ ইন</Text></Button>
 							</Col>
 							<Col>
-								<Button style={{backgroundColor:'whitegreen',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>Registration</Text></Button>
+								<Button style={{backgroundColor:'whitegreen',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>রেজিস্ট্রেশন</Text></Button>
 							</Col>
 							
 						</Row>
@@ -50,7 +50,7 @@ class MainUserRegistrationScreen extends Component {
 					<ListItem style={{marginTop:50}}>
 					  <Row>
 							<Col>
-								<Button style={{marginRight:80,backgroundColor:'coral',width:'85%',textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>English</Text></Button>
+								<Button style={{marginRight:80,backgroundColor:'coral',width:'85%',textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>মেস</Text></Button>
 							</Col>
 						</Row>
 					</ListItem>
@@ -58,7 +58,7 @@ class MainUserRegistrationScreen extends Component {
 					<ListItem>
 					  <Row>
 							<Col>
-								<Button style={{marginRight:80,backgroundColor:'coral',width:'85%',textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>English</Text></Button>
+								<Button style={{marginRight:80,backgroundColor:'coral',width:'85%',textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>বাসা</Text></Button>
 							</Col>
 						</Row>
 					</ListItem>

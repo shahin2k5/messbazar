@@ -2,66 +2,95 @@ import React, { Component } from 'react';
 import { StyleSheet, Text, Image, View, ImageBackground, TextInput, TouchableOpacity  } from 'react-native';
 import { Container, Header, Content } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
-
+import {apiUrl} from '../services/apiService';
+import HeaderScreen from './HeaderScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 class ProductDetailsScreen extends Component {
 	
-	onPressOpen=(screenName)=>{
-		this.props.navigation.navigate(screenName);
-	}
+	constructor(props) {
+		super(props);
+		 this.state = {
+			  productid: this.props.route.params.productid,
+			  productDetails: [], 
+			  error: false
+		   };
+		console.log('productid: ',this.props.route.params.productid);
+		  
+	  }
+	  
+	 componentDidMount(){
+		  this.getProductDetails();
+		}	  
+		
+	componentDidUpdate(){
+		  this.getProductDetails();
+		}
+		
+		
+	getProductDetails = async () => {
+       try { 
+			   const productid = this.state.productid;
+			   const response = await fetch(apiUrl+"productdetails/"+productid);
+			   if (response.ok) {
+				   const data = await response.json();
+				    
+				   this.setState({
+					   productDetails:data
+				   })		   
+			   } else { this.setState({ error: true }) }
+		   } catch (e) { 
+				console.log('error: ',e);
+			}
+	  }
+
+	
+	  onPressOpen=(product)=>{
+		  AsyncStorage.setItem('@cartItems',JSON.stringify(product));
+		  this.props.navigation.navigate('ShoppingCart',{productid:product.id});
+	  }
+	  
   render() {
     return (
       <Container>
-			
+			<HeaderScreen />
 			<Content style={styles.maincontent}>
 				<Grid>
+					 
 					<Row>
-						<Col>
-							<Image source={require('../assets/images/ProductDetailsScreen/arrow-left.png')} style={styles.btnBackgroundTop}/>
+						<Col size={10} style={{justifyContent:'center'}}>
+							<Image source={require('../assets/images/ProductDetailsScreen/arrow-left.png')} style={styles.btnArrowTop}/>
 						</Col>
-						<Col>
 						 
-						</Col>
-					</Row>
-					
-					<Row>
-						 
-						<Col>
-							<Row>
-								
-								<Col><Image source={require('../assets/images/CategoryScreen/apnar-category.png')}/></Col>
-								
-								<Col></Col>
-								<Col></Col>
-								<Col><Image source={require('../assets/images/ProductDetailsScreen/search.png')} style={styles.btnBackgroundTop}/></Col>
-							</Row>
+						<Col size={75}>
+							 <Image source={require('../assets/images/CategoryScreen/apnar-category.png')}/>
 							<Image source={require('../assets/images/CategoryScreen/Line-9.png')}/>
+						</Col>
+						<Col size={15}  style={{justifyContent:'center'}}>
+							<Image source={require('../assets/images/ProductDetailsScreen/search.png')} style={styles.btnSearchTop}/>
 						</Col>
 					</Row>
 					
 					<Row>
 						<Col>
 							<ImageBackground source={require('../assets/images/ProductDetailsScreen/product-bg.png')} style={styles.productBackground}>
-								<Image source={require('../assets/images/ProductDetailsScreen/product.png')} style={styles.productImage}/>
+								<Image source={{uri:`http://127.0.0.1:8000/assets/images/products/product.png`}} style={styles.productImage}/>
 							</ImageBackground>
 						</Col>
 						 
 					</Row>
 					
 					<Row>
-						<Col>
+						<Col size={90}>
 							
-								<Text style={styles.productname}>Mnicat Rice</Text>
-								 
-								<Image source={require('../assets/images/ProductDetailsScreen/price.png')} style={styles.productprice}/>
-							 
+								<Text style={styles.productname}>{this.state.productDetails.product_title}</Text>
+								
+								<Text style={styles.price}>৳{this.state.productDetails.sale_price}</Text>
 							
 						</Col>
-						<Col>
-								<TextInput style={styles.textinput}/>
-						</Col>
-						<Col style={{textAlign:'right'}}>
-							<TouchableOpacity onPress={()=>this.onPressOpen('CartConfirm')}>
-								<Image source={require('../assets/images/ProductDetailsScreen/plus.png')} style={styles.productImage}/>
+						 
+						<Col size={10}>
+							<TouchableOpacity onPress={()=>this.onPressOpen(this.state.productDetails)}>
+								<Image source={require('../assets/images/ProductDetailsScreen/plus.png')} style={styles.btnProductAdd}/>
 							</TouchableOpacity>
 						</Col>
 						
@@ -70,9 +99,7 @@ class ProductDetailsScreen extends Component {
 					<Row>
 						<Col>
 							
-							 	<Text>
-									নাজিরশাইল: মানসম্মত চালের মধ্যে নাজিরশাইল অন্যতম। এই চালের বিশেষগুন হল ধান অর্ধসিদ্ধ করে চাল তৈরি করা হয়। দিনাজপুরের কৃষক হতে সংগৃহীত উন্নত মানের ধান থেকে অত্যাধুনিক স্বয়ংক্রিয় মেশিনে তৈরি ও বাছাইকৃত নাজিরশাইল চাল। চাল গুলি দেখতে যেমন সুন্দর তেমনি পুষ্টিকর ও স্বাদে  অনন্য। তাই আপনার দৈনিক খাবারের তালিকায় যোগ করতে পারেন চাল আড়ৎ’ দিনাজপুর এর নাজিরশাইল চাল।
-								</Text>
+							 	<Text>{this.state.productDetails.short_description}</Text>
 						 
 						</Col>
 						 
@@ -139,11 +166,7 @@ const styles = StyleSheet.create({
 		marginLeft:'13%',
 		marginTop:-15
 	  },
-	  productname:{
-		  fontSize:18,
-		  color:'coral',
-		  fontWeight:'bold'
-	  },
+	 
 	  textinput:{
 		  backgroundColor:'#ddd'
 	  },
@@ -156,6 +179,20 @@ const styles = StyleSheet.create({
 		  marginTop:30,
 		  marginLeft:35,
 		  marginRight:15,
+	  },
+	  btnProductAdd:{
+		  height:30,
+		  width:30
+	  },
+	  productname:{
+		  color:'darkgreen',
+		  fontSize:20,
+		  fontWeight:'bold'
+	  },
+	  price:{
+		  color:'coral',
+		  fontSize:17,
+		  fontWeight:'bold'
 	  }
 });
 

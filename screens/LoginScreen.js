@@ -18,10 +18,10 @@ class LoginScreen extends Component {
 					</Row>
 					<Row>
 						<Col>
-							<Button style={{backgroundColor:'lightgreen',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>Login</Text></Button>
+							<Button style={{backgroundColor:'#87D2A7',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>লগ ইন</Text></Button>
 						</Col>
 						<Col>
-							<Button style={{backgroundColor:'whitegreen',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>Registration</Text></Button>
+							<Button style={{backgroundColor:'#D5DED9',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>রেজিস্ট্রেশন</Text></Button>
 						</Col>
 						
 					</Row>
@@ -29,7 +29,7 @@ class LoginScreen extends Component {
 						<Col>
 							<Item>
 								<Icon type={"FontAwesome"} active name='home' />
-								<Input placeholder="Enter your eamil" />
+								<Input placeholder="ইমেল অথবা ফোন নাম্বার" />
 							</Item>
 						</Col>
 						 
@@ -39,7 +39,7 @@ class LoginScreen extends Component {
 						<Col>
 							<Item>
 								<Icon active name='key' />
-								<Input placeholder="Enter password" />
+								<Input placeholder="পাসওয়ার্ড" />
 							</Item>
 						</Col>
 						
@@ -49,7 +49,7 @@ class LoginScreen extends Component {
 							
 						</Col>
 						<Col>
-							<Text>Password</Text>
+							<Text>পাসওয়ার্ড ভুলে গেছি</Text>
 						</Col>
 						
 					</Row>
@@ -59,7 +59,7 @@ class LoginScreen extends Component {
 					<Row>
 						<Col></Col>
 						<Col>
-							<Button style={{backgroundColor:'lightgreen',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>Login</Text></Button>
+							<Button style={{backgroundColor:'#87D2A7',width:120,textAlign:'center',paddingLeft:35,borderRadius:30}}><Text>লগ ইন</Text></Button>
 						</Col>
 						<Col>
 							
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
 	 backgroundImage: {
 		flex: 1,
 		width: null,
-		height: null,
+		height: 700,
 	  }
 });
 

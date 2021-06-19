@@ -5,14 +5,64 @@ import { Col, Row, Grid } from 'react-native-easy-grid';
 
 class SubCategoryScreen extends Component {
 	
-	  onPressOpen=(screenName)=>{
-		  this.props.navigation.navigate(screenName);
+	 constructor(props) {
+		super(props);
+		 this.state = {
+			  subcategoryList: [], // list is empty in the beginning
+			  error: false
+		   };
 	  }
+	  
+	 componentDidMount(){
+		  this.getSubCategoryList();
+		}	  
+		
+	componentDidUpdate(){
+		  this.getSubCategoryList();
+		}
+		
+ 
+		
+	getSubCategoryList = async () => {
+       try { 
+			   const catid = this.props.route.params.category;
+			   const response = await fetch("http://127.0.0.1:8000/api/subcategory/list/"+catid);
+			   if (response.ok) {
+				   const data = await response.json();
+				   // console.log('response data: ',data);
+				   this.setState({
+					   subcategoryList:data
+				   })		   
+			   } else { this.setState({ error: true }) }
+		   } catch (e) { 
+				console.log('error: ',e);
+			}
+	  }
+
+	renderCategory=()=>{
+		return this.state.subcategoryList.map((subcategory, index)=>{
+			var icon = subcategory.image;
+			return(
+				<TouchableOpacity key={index} size={32} style={styles.button} onPress={()=>this.onPressOpen(subcategory.id)} >
+					<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
+						<Image source={require('../assets/images/CategoryScreen/chal_bosta.png')} 				style={styles.btnText}/>
+						<Image source={require('../assets/images/CategoryScreen/chal_text.png')} 				style={styles.btnText}/>
+						<Text style={styles.btnTitle}>{subcategory.category_title}</Text>
+					</ImageBackground>
+				</TouchableOpacity>
+			 
+			);
+		});
+	}
+	
+ onPressOpen=(subcategoryID)=>{
+	  this.props.navigation.navigate('ProductList',{subcategory:subcategoryID});
+  }
   
   render() {
     return (
       <Container>
-			 
+			 <Header />
 			<Content>
 				<Grid>
 					<Row>
@@ -31,91 +81,11 @@ class SubCategoryScreen extends Component {
 							<Image source={require('../assets/images/CategoryScreen/Line-9.png')}/>
 						</Col>
 					</Row>
-					
-					<Row>
-						<Col>
-							<TouchableOpacity style={styles.button} onPress={()=>this.onPressOpen('ProductList')} >
-								<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-									<Image source={require('../assets/images/CategoryScreen/rondhon-icon.png')} style={styles.btnText}/>
-									<Image source={require('../assets/images/CategoryScreen/rondhon.png')} style={styles.btnText}/>
-								</ImageBackground>
-							</TouchableOpacity>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/mach-mangso-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/mach-mangso.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/mach-mangso-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/mach-mangso.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-					</Row>
-					<Row>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/fol-sobji-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/fol-sobji.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/paniyo-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/paniyo.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/fol-sobji-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/fol-sobji.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-					</Row>
-					<Row>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/office-ponno-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/office-ponno.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/gorer-soronjam-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/gorer-soronjam.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/office-ponno-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/office-ponno.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						
+					<Row style={styles.btnContainer}>
+						{this.renderCategory()}
 					</Row>
 					
-					<Row>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/sastho-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/sastho.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/sondhorjo-bordhon-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/sondhorjo-bordhon.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/sastho-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/sastho.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-					</Row>
+					
 					 
 					
 				</Grid>
@@ -159,6 +129,17 @@ const styles = StyleSheet.create({
 		height: 35,
 		marginLeft:'13%',
 		marginTop:0
+	  },
+	   button:{
+		width:'33%'
+	  },
+	  btnContainer:{
+		  flexWrap:'wrap',
+		  flexDirection:'row'
+	  },
+	  btnTitle:{
+		  fontSize:15,
+		  fontWeight:'bold'
 	  }
 });
 

@@ -1,86 +1,61 @@
-/* import React, { useRef, useState } from "react";
-import { Button, DrawerLayoutAndroid, Text, StyleSheet, View } from "react-native";
-
-const CategoryScreen = () => {
-  const drawer = useRef(null);
-  const [drawerPosition, setDrawerPosition] = useState("left");
-  const changeDrawerPosition = () => {
-    if (drawerPosition === "left") {
-      setDrawerPosition("right");
-    } else {
-      setDrawerPosition("left");
-    }
-  };
-
-  const navigationView = () => (
-    <View style={[styles.container, styles.navigationContainer]}>
-      <Text style={styles.paragraph}>I'm in the Drawer!</Text>
-      <Button
-        title="Close drawer"
-        onPress={() => drawer.current.closeDrawer()}
-      />
-    </View>
-  );
-
-  return (
-    <DrawerLayoutAndroid
-      ref={drawer}
-      drawerWidth={300}
-      drawerPosition={drawerPosition}
-      renderNavigationView={navigationView}
-    >
-      <View style={styles.container}>
-        <Text style={styles.paragraph}>
-          Drawer on the {drawerPosition}!
-        </Text>
-        <Button
-          title="Change Drawer Position"
-          onPress={() => changeDrawerPosition()}
-        />
-        <Text style={styles.paragraph}>
-          Swipe from the side or press button below to see it!
-        </Text>
-        <Button
-          title="Open drawer"
-          onPress={() => drawer.current.openDrawer()}
-        />
-      </View>
-    </DrawerLayoutAndroid>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16
-  },
-  navigationContainer: {
-    backgroundColor: "#ecf0f1"
-  },
-  paragraph: {
-    padding: 16,
-    fontSize: 15,
-    textAlign: "center"
-  }
-});
-
-export default CategoryScreen;
- */
-
 import React, { Component } from 'react';
-import { StyleSheet, Text, Image, View, ImageBackground, DrawerLayoutAndroid,Button, TouchableOpacity  } from 'react-native';
+import { StyleSheet, Text, Image, View, ImageBackground, DrawerLayoutAndroid,Button, 		
+		TouchableOpacity  } from 'react-native';
 import { Container, Header, Content } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 
 import SubCategoryScreen from './SubCategoryScreen';
+import { apiUrl, getCategoryAll } from '../services/apiService';
+ 
+ 
+
 
 class CategoryScreen extends Component {
 	 constructor(props) {
 		super(props);
 		this.drawer = React.createRef();
+		 this.state = {
+			  categoryList: [], // list is empty in the beginning
+			  error: false
+		   };
 	  }
+	  
+	  componentDidMount(){
+		  this.getUserList();
+		   
+		}
+		
+	getUserList = async () => {
+       try { 
+	   console.log(apiUrl+"category/list");
+			   const response = await fetch(apiUrl+"category/list");
+			   if (response.ok) {
+				   const data = await response.json();
+				   // console.log('response data: ',data);
+				   this.setState({
+					   categoryList:data
+				   })		   
+			   } else { this.setState({ error: true }) }
+		   } catch (e) { 
+				console.log('error: ',e);
+			}
+	  }
+
+	renderCategory=()=>{
+		return this.state.categoryList.map((category, index)=>{
+			var icon = category.image;
+			return(
+				<TouchableOpacity key={index} size={50} style={styles.button} onPress={()=>this.onPressOpen(category.id)} >
+					<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
+						<Image source={require('../assets/images/CategoryScreen/office-ponno-icon.png')} style={styles.btnIcon}/>
+						
+						<Text style={styles.btnTitle}>{category.category_title}</Text>
+					</ImageBackground>
+				</TouchableOpacity>
+			 
+			);
+		});
+	}
 	
 	drawerContentView = () => (
     <View style={[styles.container, styles.navigationContainer]}>
@@ -96,8 +71,8 @@ class CategoryScreen extends Component {
 	  this.drawer.current.openDrawer();
   }
   
-  onPressOpen=(screenName)=>{
-	  this.props.navigation.navigate(screenName);
+  onPressOpen=(categoryID)=>{
+	  this.props.navigation.navigate('SubCategory',{category:categoryID});
   }
   
   render() {
@@ -106,7 +81,9 @@ class CategoryScreen extends Component {
 		  ref={this.drawer}
 		  drawerWidth={300}
 		  renderNavigationView={this.drawerContentView} >
+		  <Header />
 		  <Content>
+				
 				<Grid>
 					<Row>
 						<Col></Col>
@@ -125,76 +102,9 @@ class CategoryScreen extends Component {
 						</Col>
 					</Row>
 					
-					<Row>
-						<Col>
-							<TouchableOpacity style={styles.button} onPress={()=>this.onPressOpen('SubCategory')} >
-								<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-									<Image source={require('../assets/images/CategoryScreen/rondhon-icon.png')} style={styles.btnText}/>
-									<Image source={require('../assets/images/CategoryScreen/rondhon.png')} style={styles.btnText}/>
-								</ImageBackground>
-							</TouchableOpacity>
-						</Col>
-						 
-						<Col>
-							<TouchableOpacity style={styles.button} onPress={()=>this.onPressOpen('SubCategory')} >
-								<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-									<Image source={require('../assets/images/CategoryScreen/mach-mangso-icon.png')} style={styles.btnIcon}/>
-									<Image source={require('../assets/images/CategoryScreen/mach-mangso.png')} style={styles.btnText}/>
-								</ImageBackground>
-							</TouchableOpacity>
-						</Col>
+					<Row style={styles.btnContainer}>
+						{this.renderCategory()}
 					</Row>
-					<Row>
-						 
-						<Col>
-						<TouchableOpacity style={styles.button} onPress={()=>this.onPressOpen('SubCategory')} >
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/paniyo-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/paniyo.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</TouchableOpacity>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/fol-sobji-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/fol-sobji.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-					</Row>
-					<Row>
-						 
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/gorer-soronjam-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/gorer-soronjam.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/office-ponno-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/office-ponno.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						
-					</Row>
-					
-					<Row>
-						 
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/sondhorjo-bordhon-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/sondhorjo-bordhon.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-						<Col>
-							<ImageBackground source={require('../assets/images/CategoryScreen/Rectangle-6.png')} style={styles.btnBackground}>
-								<Image source={require('../assets/images/CategoryScreen/sastho-icon.png')} style={styles.btnIcon}/>
-								<Image source={require('../assets/images/CategoryScreen/sastho.png')} style={styles.btnText}/>
-							</ImageBackground>
-						</Col>
-					</Row>
-					 
-					
 				</Grid>
 				   
 			</Content>
@@ -215,7 +125,8 @@ const styles = StyleSheet.create({
 	  btnTextTop:{
 		  height:20,
 		  width:105,
-		  marginTop:-7
+		  marginTop:-7,
+		  marginLeft:45
 	  },
 	  btnBackground: { 
 		width: '100%',
@@ -226,14 +137,14 @@ const styles = StyleSheet.create({
 		 
 	  }, 
 	  btnText: { 
-		width: '60%',
+		width: 80,
 		height: 25,
 		marginTop:10,
 		resizeMode:'cover'
 	  },
 	    btnIcon: { 
-		width: 45,
-		height: 45,
+		width: 55,
+		height: 55,
 		marginLeft:'13%',
 		marginTop:-15
 	  },
@@ -250,6 +161,17 @@ const styles = StyleSheet.create({
 		padding: 16,
 		fontSize: 15,
 		textAlign: "center"
+	  },
+	  button:{
+		width:'50%'
+	  },
+	  btnContainer:{
+		  flexWrap:'wrap',
+		  flexDirection:'row'
+	  },
+	  btnTitle:{
+		  fontSize:20,
+		  fontWeight:'bold'
 	  }
 });
 

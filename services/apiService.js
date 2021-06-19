@@ -1,3 +1,13 @@
+export const apiUrl = "http://127.0.0.1:8000/api/";
+
+export const getCategoryAll=()=>{
+	fetch(apiUrl+'category/list').then(response=>response.json()).then(data=>{
+		console.log(data);
+		return data;
+	}).catch(error=>{
+		console.log(error);
+	})
+}
 export const categories = [
 	{id:'1',title:'Ad One',image:'../assets/images/advertise-1-1.jpg'},
 	{id:'2',title:'Ad two',image:'../assets/images/advertise-1-2.jpg'},
