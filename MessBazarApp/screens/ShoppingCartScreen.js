@@ -342,7 +342,7 @@ class ShoppingCartScreen extends Component {
 			<HeaderScreen navigation={this.props.navigation} total_price={this.props.cartList?this.props.cartList.total_final_price:'0.00'}   title={"বাজার/কার্ট লিস্ট"} />
 			<Content style={styles.contentBar}>
 				<Grid>
-					{this.state.cartList.cart_item?this.renderShoppingCart():(
+					{this.state.cartList?this.renderShoppingCart():(
 						<Row style={{marginTop:100}}>
 							<Col style={{justifyContent:'center'}}>
 								<Icon name="basket" style={{alignSelf:'center',color:'coral'}}/>
@@ -369,7 +369,7 @@ class ShoppingCartScreen extends Component {
 							
 							<Button  style={{backgroundColor:'#93FC87'}}>
 							  <Text>TOTAL</Text>
-							  <Text>৳.{this.props.cartList.total_final_price}</Text>
+							  <Text>৳.{this.props.cartList?this.props.cartList.total_final_price:0.00}</Text>
 							</Button>
 							<Button onPress={()=>{this.onPressOpenLoginCart()}} style={{backgroundColor:'#009933',color:'#fff'}}>
 							  <Icon name="basket"/>

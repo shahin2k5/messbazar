@@ -133,7 +133,14 @@ class CartConfirmedScreen extends Component {
 			  
 	}
 	
+	dTime=()=>{
+		var dTime = new Date();
+		dTime = dTime.setHours(dTime.getHours() + 2); 
+		return new Date(dTime).toLocaleString();
+	}
+	
   render() {
+
     return (
       <Container>
 			<HeaderScreen navigation={this.props.navigation} title={"CART CONFIRM"} />
@@ -243,7 +250,9 @@ class CartConfirmedScreen extends Component {
 					
 					<Row style={{marginTop:30}}>
 						<Col style={{justifyContent:'center'}}>
-							<Text style={{fontSize:21,color:'green'}}>বাজার পৌছানোর সময়: </Text>
+							<Text style={{fontSize:21,color:'green', textAlign:'center'}}>বাজার পৌছানোর সময়:</Text>
+							<Text style={{fontSize:21,color:'green',textAlign:'center'}}> { this.dTime() }</Text>
+							
 						</Col>
 					</Row>
 					{/****
