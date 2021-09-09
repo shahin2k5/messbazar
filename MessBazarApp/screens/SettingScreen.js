@@ -1,10 +1,24 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, Image, View, ImageBackground } from 'react-native';
-import { Container, Header, Content, Button, Item, Input, Icon, List, ListItem ,Body } from 'native-base';
+import { Container, Header, Content, Button, Item, Input, Icon ,Body } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 import CheckBox from '@react-native-community/checkbox';
 import { apiUrl, getCategoryAll } from '../services/apiService';
+import HeaderScreen from './HeaderScreen';
+import { connect, dispatch } from 'react-redux' 
+import * as actions from '../services/actions/actions'
 
+function mapStateToProps(state){
+	return {
+		settings: state.userReducer.settings
+	}
+}
+
+function mapDispatchToProps(dispatch){
+	return { 
+			getSettings:data=>dispatch(actions.getSettings(data)),
+	}
+}
 
 class SettingScreen extends Component {
 	
@@ -34,7 +48,7 @@ class SettingScreen extends Component {
 			confirm_password:this.state.confirm_password,
 			checked:this.state.checked,
 		};
-		console.log(data);
+		 
 		
 		fetch(apiUrl+"auth/registration",{
 				method: 'POST',
@@ -54,13 +68,13 @@ class SettingScreen extends Component {
   render() {
     return (
       <Container>
-		 
+		 <HeaderScreen navigation={this.props.navigation} title={"সেটিংস"} />
 			 <ImageBackground source={require('../assets/images/LoginScreen/login_bg.png')} style={styles.backgroundImage}>
 				  
-				  <List style={{marginTop:80, paddingLeft:5}}>
+				  <Grid style={{marginTop:80, paddingLeft:5}}>
 					
 						
-					<ListItem >
+					<Row >
 						 <Row>
  
 							<Col>
@@ -69,50 +83,17 @@ class SettingScreen extends Component {
 							
 							
 						</Row>
-					</ListItem>
-					
-					<ListItem style={{marginTop:40}}>
-						<Row>
-							<Col><Text>House/Mess Name</Text></Col>
-							<Col></Col>
-						</Row>
-					</ListItem>
-					
-					<ListItem style={{marginTop:40}}>
-						<Row>
-							<Col><Text>User Name</Text></Col>
-							<Col></Col>
-						</Row>
-					</ListItem>
-					
-					
-					<ListItem style={{marginTop:40}}>
-						<Row>
-							<Col><Text>Address</Text></Col>
-							<Col></Col>
-						</Row>
-					</ListItem>
-					
-					
-				 
-					
-				 
-				
-					 
-					 <Row style={{marginTop:30}}>
-						<Col></Col>
-						
-						<Col style={{justifyContent:'center'}}>
-							<Button style={{backgroundColor:'orange',width:'100%',textAlign:'center',borderRadius:30,justifyContent:'center'}}>
-							<Text style={{textAlign:'center'}}>LOGOUT</Text>
-							</Button>
-						</Col>
-					    <Col></Col>
 					</Row>
-					 
+					
+					<Row style={{marginTop:40}}>
+						<Row>
+							<Col><Text></Text></Col>
+							<Col></Col>
+						</Row>
+					</Row>
 					
 					
-				  </List>
+				  </Grid>
 		  
 				
 			</ImageBackground>
@@ -139,4 +120,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default SettingScreen;
+export default connect(mapStateToProps, mapDispatchToProps)(SettingScreen);

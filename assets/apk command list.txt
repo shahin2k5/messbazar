@@ -1,0 +1,3 @@
+apk command 
+
+extraPackagerArgs: ["--sourcemap-output", "$buildDir/intermediates/sourcemaps/react/release/index.android.bundle.packager.map"]

@@ -26,7 +26,14 @@ class User extends Authenticatable implements JWTSubject
 		'branch_name', 
 		'email', 
 		'password',
-		'remember_token'
+		'remember_token',
+		'current_meal_manager',
+		'current_meal_manager_mobile',
+		'current_rice_manager',
+		'current_rice_manager_mobile',
+		'email_verified_at',
+		'created_at',
+		'updated_at'
     ];
   
     /**
@@ -65,5 +72,10 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+	
+	public function orderAddress()
+    {
+        //return $this->hasMany(OrderAddress::class,);
     }
 }

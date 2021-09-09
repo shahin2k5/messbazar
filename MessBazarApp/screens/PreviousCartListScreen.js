@@ -1,12 +1,26 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, Image, View, ImageBackground, TouchableOpacity, TextInput, ToastAndroid  } from 'react-native';
-import { Container, Header, Content, Button, Footer, FooterTab } from 'native-base';
+import { Container, Header, Content, Button, Footer, FooterTab, Icon } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
-import { Icon } from 'react-native-elements';
 import NumericInput from 'react-native-numeric-input'
 import HeaderScreen from './HeaderScreen';
 import * as api from '../services/apiService';
 import DeviceInfo from 'react-native-device-info';
+import { connect, dispatch } from 'react-redux' 
+import * as actions from '../services/actions/actions'
+
+
+function mapStateToProps(state){
+	return {
+		cartList:state.cartReducer.cartList
+	}
+}
+
+function mapDispatchToProps(dispatch){
+	return{
+		getCartList:data=>dispatch(actions.getCartList(data))	
+	}
+}
 
 class PreviousCartListScreen extends Component {
 	
@@ -119,7 +133,7 @@ class PreviousCartListScreen extends Component {
 	}	
 	
 	downPcs=(product)=>{
-		console.log(product);
+	 
 		product.product_pcs = product.product_pcs-1
 		product.subtotal_price = product.product_qnty*product.final_sale_price
 		this.setState({
@@ -132,7 +146,7 @@ class PreviousCartListScreen extends Component {
 		//console.log(product);
 		  product = {
 			  ...product,
-			  device_id: this.state.uniqueId
+			  device_id: this.state.device_id
 		  };
 		 
 		  fetch(api.apiUrl+"cartupdate",{
@@ -143,128 +157,116 @@ class PreviousCartListScreen extends Component {
 				},
 				body: JSON.stringify(product)
 			  }).then(response=>response.json()).then(data=>{
-				  // console.log('cart add success data: ', data);
+				  console.log('cart add success data: ', data);
 				  this.showToast("Product added to cart list!");
 				//this.props.navigation.navigate('ShoppingCart',{device_id:this.state.uniqueId});
-			  },error=>{
+			  }).catch(error=>{
 				  console.log('error: ', error);
 			  }); 
 		 
 	}
    
-   
+	onPressOpenProductDetails=(productid)=>{
+		this.props.navigation.navigate('Stack',{screen:'ProductDetails',params:{product:productid}});
+	}
+	
 		
 	renderShoppingCart=()=>{
 		 
 		return this.state.cartList.cart_item && this.state.cartList.cart_item.map((cartitem, index)=>{
 			
+		
 			return(
 			
-					<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',paddingTop:5,paddingBottom:5}}>
-					
-						<Col size={10} style={{justifyContent:'center'}}>
-							<TouchableOpacity onPress={()=>this.removeCartItem(cartitem.id)} style={{justifyContent:'center',textAlign:'center',borderRadius:50,height:25,width:25,backgroundColor:'#d9a',marginLeft:5}} >
-								<Icon name="remove" color="#c2a" style={{justifyContent:'center',fontSize:15,textAlign:'center'}}  />
-							</TouchableOpacity>
-						</Col>
+				<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#ffd',paddingTop:5,paddingBottom:5}} >
+				
+					<Col size={10} style={{justifyContent:'center'}}>
 						 
-					
-					
-						<Col size={17} style={{justifyContent:'center'}}>
-							<TouchableOpacity onPress={()=>this.onPressOpen(cartitem.id)}>
-								<Image source={{uri:api.apiBaseUrl+cartitem.product.image}} style={{height:40,width:40,marginLeft:5}}/>
-							</TouchableOpacity>
-						</Col>
-						
-						<Col size={83}>
-							<Row>
-								<Col size={90}>
-									<TouchableOpacity onPress={()=>this.onPressOpen(cartitem.id)}>
-										<Text style={styles.productTitle}>
-										{cartitem.product.product_title} </Text>
-									</TouchableOpacity>
-								</Col>
-								<Col size={15}>
-									<Text  style={{color:'#666'}}>{cartitem.unit_type}</Text>
-								</Col>
-							</Row>
-							<Row>
-								<Col size={55}>
-									<Row >
-										<Col  size={10} >
-											{	cartitem.discount>0?
-												(<Text style={{textDecorationLine: 'line-through'}}>৳{cartitem.sale_price}</Text>):
-												(<Text style={{color:'#109D9D'}}>৳{cartitem.final_sale_price}</Text>)}
-										</Col>
-										
-										<Col  size={10} >
-											{	cartitem.discount?
-												(<Text style={{color:'#109D9D'}}>৳{cartitem.final_sale_price}</Text>):
-												(<Text style={{color:'#109D9D'}}></Text>)}
-										</Col>
-									</Row>
-									<Row></Row>
-									
-									{(cartitem.product.show_pcs_box)?
-									(<Row >
-										<Col size={5}  style={{justifyContent:'center'}}>
-											<Icon name="remove" onPress={()=>{this.downPcs(cartitem)}} style={{fontSize:18}}/>
-										</Col>
-										<Col size={8} style={{justifyContent:'center'}}>
-											<Text>
-												 {cartitem.product_pcs?cartitem.product_pcs:0} Pcs 
-											</Text>
-										</Col> 
-										<Col size={10}  style={{justifyContent:'center'}}>
-											<Icon name="add" onPress={()=>{this.upPcs(cartitem)}} style={{fontSize:18}}/>
-										</Col>
-									</Row>):(<Text></Text>)}
-									
-									<Row></Row>
-									<Row></Row>
-								</Col>
-								 
-						
-								<Col size={47} style={{justifyContent:'center'}}>
-								
-									<Row>
-										<Col style={{justifyContent:'center'}}>
-											<Icon name="remove" onPress={()=>{this.downQnty(cartitem)}} style={styles.lblItemAttrPcsIcon,{fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
-										</Col>
-										<Col style={{justifyContent:'center'}}>
-											<Text style={{textAlign:'center',borderWidth:1,paddingTop:5,paddingBottom:5,borderColor:'#444',color:'#444',marginLeft:3}}>{cartitem.product_qnty?cartitem.product_qnty:cartitem.product_qnty=1}</Text>
-										</Col>
-										<Col style={{justifyContent:'center'}}>
-											<Icon name="add" 
-												onPress={()=>{this.upQnty(cartitem)}} 
-												style={{
-													fontWeight:'bold',
-													borderWidth:1,
-													textAlign:'center',
-													borderRadius:40,
-													fontSize:16,
-													backgroundColor:'#F1F1F1',
-													borderColor:'red',
-													margin:3,
-													height:30,
-													width:30,
-													paddingTop:7,
-													color:'red'}}/>
-										</Col>
-									</Row>
-								</Col>
-								 
-								 
-							</Row>
-						</Col>
-						
-					
-					</Row>
+					</Col>
 					 
-			
-			
+				
+				
+					<Col size={17} style={{justifyContent:'center'}}>
+						 <TouchableOpacity onPress={()=>this.onPressOpenProductDetails(cartitem.product)}>
+							<Image source={{uri:api.apiBaseUrl+cartitem.product.image}} style={{height:40,width:40,marginLeft:5}}/>
+						</TouchableOpacity>
+					</Col>
+					
+					<Col size={83}>
+						<Row>
+							<Col size={90}>
+								<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(cartitem.product)}>
+									<Text style={{fontSize:17,color:'brown',fontWeight:'bold'}}>
+									{cartitem.product.product_title} </Text>
+								</TouchableOpacity>
+							</Col>
+							<Col size={15}>
+								<Text  style={{color:'#666'}}>{cartitem.product.unit_type}</Text>
+							</Col>
+						</Row>
+						<Row>
+							<Col size={55}>
+								<Row >
+									 
+									
+									<Col  size={15} >
+										{	 
+											(<Text style={{color:'#109D9D'}}>৳{cartitem.subtotal_price}</Text>)
+										}
+									</Col>
+								</Row>
+								<Row></Row>
+								
+								{(cartitem.product.show_pcs_box)?
+								(<Row style={{marginTop:10,marginBottom:5}}>
+									<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
+										<Text style={{textAlign:'center'}}>
+										<Icon name="remove" style={{fontSize:18}}/>
+										</Text>
+									</Col>
+									<Col size={5} style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#fcc'}}>
+										<Text style={{textAlign:'center'}}>
+											 {cartitem.product_pcs?cartitem.product_pcs:0} Pcs 
+										</Text>
+									</Col> 
+									<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
+										<Text style={{textAlign:'center'}}>
+										<Icon name="add"  style={{fontSize:18}}/>
+										</Text>
+									</Col>
+								</Row>):(<Text></Text>)}
+								
+								<Row></Row>
+								<Row></Row>
+							</Col>
+							 
+					
+							<Col size={47} style={{justifyContent:'center'}}>
+							
+								<Row>
+									<Col style={{justifyContent:'center'}}>
+										
+									</Col>
+									<Col style={{justifyContent:'center'}}>
+										<Text style={{textAlign:'center',borderWidth:1,paddingTop:5,paddingBottom:5,borderColor:'#444',color:'#444',marginLeft:3}}>{cartitem.product_qnty?cartitem.product_qnty:cartitem.product_qnty=1}</Text>
+									</Col>
+									<Col style={{justifyContent:'center'}}>
+										 
+									</Col>
+								</Row>
+							</Col>
+				
+							 
+						</Row>
+					</Col>
+					
+				
+				</Row>
+				 
+		
+		
 
-			);
+		);
 		});
 		
 		    
@@ -278,12 +280,38 @@ class PreviousCartListScreen extends Component {
 	
   onPressOpenLoginCart=()=>{
 		 
-		this.props.navigation.navigate('LoginCart',{device_id:this.state.uniqueID});
+		this.props.navigation.navigate('LoginCart',{device_id:this.state.device_id});
   }
   
   showToast = (msg) => {
     ToastAndroid.show(msg, ToastAndroid.SHORT);
   };
+  
+  openCartDetailsPrepare=(cart_id)=>{
+	   //this.props.navigation.navigate('Stack',{screen:'PrepareCartList',params:{cart_id}});
+	     product = {
+			  cart_id:cart_id,
+			  device_id: this.state.device_id
+		  };
+		 
+		  fetch(api.apiUrl+"cartaddprepare",{
+				method: 'POST',
+				headers: {
+				  'Accept': 'application/json',
+				  'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(product)
+			  }).then(response=>response.json()).then(data=>{
+				  console.log('cart add success data: ', data);
+				  this.props.getCartList(data.data)
+				  this.showToast("Previous cart is added to cart list!");
+				  this.props.navigation.navigate('PrepareCartList',{cart_id:this.props.cartList.id});
+			  }).catch(error=>{
+				  console.log('error: ', error);
+			  }); 
+   }
+   
+   
 	  
 	  
   render() {
@@ -295,7 +323,7 @@ class PreviousCartListScreen extends Component {
 					{this.state.cartList.cart_item?this.renderShoppingCart():(
 						<Row style={{marginTop:100}}>
 							<Col style={{justifyContent:'center'}}>
-								<Icon name="remove-shopping-cart"/>
+								
 								<Text style={{textAlign:'center',color:'coral',fontSize:25}}>Cart is empty!</Text>
 							</Col>
 						</Row>
@@ -309,20 +337,18 @@ class PreviousCartListScreen extends Component {
 			}}>
 				 
 						  <FooterTab>
-							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.openPreviousCart()}}>
-								<Icon name="arrow-back"  style={{color:'#333'}}/>
-							  <Text>
-								আগের তালিকা
-							  </Text>
-							 
+						  	<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.props.navigation.navigate('PreviousCart')}}>
+							  <Icon name="arrow-back"  style={{color:'#333'}}/>
+							  <Text>পেছনে</Text>
 							</Button>
 							
 							<Button  style={{backgroundColor:'#93FC87'}}>
 							  <Text>TOTAL</Text>
 							  <Text>৳{this.totalSalePrice()[2]}</Text>
 							</Button>
-							<Button  style={{backgroundColor:'#009933',color:'#fff'}}>
-							  <Text  style={{color:'#fff'}}></Text>
+							<Button  style={{backgroundColor:'#93FC87'}}>
+							  <Icon name="basket" style={{color:'#333'}} onPress={()=>{this.openCartDetailsPrepare(this.state.cart_id)}} />
+							  <Text>লিস্ট তৈরী</Text>
 							</Button>
 						  </FooterTab>
 			</Footer>
@@ -371,8 +397,13 @@ const styles = StyleSheet.create({
 	lineNumbox:{
 		paddingRight:12,
 		justifyContent:'center'
-	}
+	}, 
+	productTitle:{
+		fontWeight:'bold',
+		color:'brown',
+		fontSize:18
+	},
 	 
 });
 
-export default PreviousCartListScreen;
+export default connect(mapStateToProps, mapDispatchToProps)(PreviousCartListScreen);

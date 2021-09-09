@@ -1,10 +1,24 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, Image, View, ImageBackground } from 'react-native';
-import { Container, Header, Content, Button, Item, Input, Icon, List, ListItem ,Body } from 'native-base';
+import { Container, Header, Content, Button, Item, Input, Icon ,Body } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 import CheckBox from '@react-native-community/checkbox';
 import { apiUrl, getCategoryAll } from '../services/apiService';
+import HeaderScreen from './HeaderScreen';
+import { connect, dispatch } from 'react-redux' 
+import * as actions from '../services/actions/actions'
 
+function mapStateToProps(state){
+	return {
+		coupon: state.userReducer.coupon
+	}
+}
+
+function mapDispatchToProps(dispatch){
+	return { 
+			getCoupon:data=>dispatch(actions.getCoupon(data)),
+	}
+}
 
 class CouponScreen extends Component {
 	
@@ -34,7 +48,7 @@ class CouponScreen extends Component {
 			confirm_password:this.state.confirm_password,
 			checked:this.state.checked,
 		};
-		console.log(data);
+		 
 		
 		fetch(apiUrl+"auth/registration",{
 				method: 'POST',
@@ -44,23 +58,41 @@ class CouponScreen extends Component {
 				},
 				body: JSON.stringify(data)
 			  }).then(response=>response.json()).then(data=>{
-				  console.log('success data: ', data);
+				  
 				  //this.props.navigation.navigate('ShoppingCart',{cartid:8});
 			  },error=>{
 				  console.log('error: ', error);
 			  }); 
 			  
 	}
+	
+	renderCoupon=()=>{
+		return this.props.coupon.map((coupon, index)=>{
+			return(
+				
+					<Row key={index} style={{marginTop:40}}>
+						<Row>
+							<Col>
+								<Text style={{textAlign:'center',padding:30,fontSize:18}}>{coupon.description_description}</Text>
+								<Text style={{textAlign:'center',padding:30,fontSize:18}}>{coupon.coupon_code}</Text>
+							</Col>
+						</Row>
+					</Row>
+			 
+			);
+		});
+	}
+	
   render() {
     return (
-      <Container>
-		 
+       <Container>
+			<HeaderScreen navigation={this.props.navigation} title={"কুপন"} />
 			 <ImageBackground source={require('../assets/images/LoginScreen/login_bg.png')} style={styles.backgroundImage}>
 				  
-				  <List style={{marginTop:80, paddingLeft:5}}>
+				  <Grid style={{marginTop:80, paddingLeft:5}}>
 					
 						
-					<ListItem >
+					<Row >
 						 <Row>
  
 							<Col>
@@ -69,51 +101,12 @@ class CouponScreen extends Component {
 							
 							
 						</Row>
-					</ListItem>
-					
-					<ListItem style={{marginTop:40}}>
-						<Row>
-							<Col><Text>House/Mess Name</Text></Col>
-							<Col></Col>
-						</Row>
-					</ListItem>
-					
-					<ListItem style={{marginTop:40}}>
-						<Row>
-							<Col><Text>User Name</Text></Col>
-							<Col></Col>
-						</Row>
-					</ListItem>
-					
-					
-					<ListItem style={{marginTop:40}}>
-						<Row>
-							<Col><Text>Address</Text></Col>
-							<Col></Col>
-						</Row>
-					</ListItem>
-					
-					
-				 
-					
-				 
-				
-					 
-					 <Row style={{marginTop:30}}>
-						<Col></Col>
-						
-						<Col style={{justifyContent:'center'}}>
-							<Button style={{backgroundColor:'orange',width:'100%',textAlign:'center',borderRadius:30,justifyContent:'center'}}>
-							<Text style={{textAlign:'center'}}>LOGOUT</Text>
-							</Button>
-						</Col>
-					    <Col></Col>
 					</Row>
-					 
+					
+					{this.renderCoupon()}
 					
 					
-				  </List>
-		  
+				  </Grid>
 				
 			</ImageBackground>
       </Container>
@@ -139,4 +132,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default CouponScreen;
+export default connect(mapStateToProps, mapDispatchToProps)(CouponScreen);

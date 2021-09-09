@@ -15,7 +15,7 @@ class AuthController extends Controller
         $credentials = $request->only(['email', 'password']);
 
         if (!$token = auth('api')->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json(['status' => 'error','error' => 'Unauthorized'], 401);
         }
 		$user = auth()->guard('api')->user();
 		$user->token = $token;
@@ -78,8 +78,8 @@ class AuthController extends Controller
 		
 		if($validate->fails()){
 			  return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
+                'status' => "fail",
+                'errors' => $validate->errors()
             ], 403);
 		}
 		try{
@@ -91,14 +91,27 @@ class AuthController extends Controller
 			 'mess_member'=>request('mess_member'), 
 			 'user_type'=>request('user_type'), 
 			 'branch_name'=>request('branch_name'), 
+			 'current_meal_manager'=>request('current_meal_manager'), 
+			 'current_meal_manager_mobile'=>request('current_meal_manager_mobile'), 
+			 'current_rice_manager'=>request('current_rice_manager'), 
+			 'current_rice_manager_mobile'=>request('current_rice_manager_mobile'), 
 			 'email'=>request('email'), 
 			 'password'=>Hash::make(request('password')), 
 			 'remember_token'=>Hash::make("messbazar")
 		]);
-		 
+		$credentials = $request->only(['email', 'password']);
+
+        if (!$token = auth('api')->attempt($credentials)) {
+            return response()->json(['status' => 'fail','error' => 'Unauthorized'], 401);
+        }
+		$user = auth()->guard('api')->user();
+		$user->token = $token;
+		return response()->json(['status' => 'success','user'=>$user]); 
+    
+	
 		}catch(Exception $ex){
 			 return response()->json([
-                'success' => false,
+                'status' => 'fail',
                 'errors' => $ex->getMessage()
             ], 403);
 		}

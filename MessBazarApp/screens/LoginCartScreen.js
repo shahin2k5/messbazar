@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, Image, View, ImageBackground  } from 'react-native';
+import { StyleSheet, Text, Image, View, ImageBackground, ToastAndroid  } from 'react-native';
 import { Container, Header, Content, Button, Item, Input, Icon } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
-import { apiUrl, getCategoryAll } from '../services/apiService';
+import *  as apiService from '../services/apiService';
 import { connect, dispatch } from 'react-redux'
 import * as actions from '../services/actions/actions'
+import HeaderScreen from './HeaderScreen';
 
 function mapStateToProps(state){
-	console.log(state.userReducer.user)
+	 
 	return {
 		user:state.userReducer.user
 	}
@@ -24,8 +25,8 @@ class LoginCartScreen extends Component {
 	constructor(props){
 		super(props);
 		this.state = {
-			email:'abc5@gmail.com',
-			password:'123456',
+			email:'',
+			password:'',
 			user: this.props.user
 		}
 	}
@@ -44,11 +45,6 @@ class LoginCartScreen extends Component {
 	
 	componentDidMount(){
 		this.focusListener = this.props.navigation.addListener("focus", () =>{
-		  console.log("Screen home")
-		  console.log(this.state.user)
-		  // if(this.state.user.token && this.state.user.name){
-			// this.props.navigation.navigate('CartConfirmed',{});
-		  // }
 		  if(this.props.user && this.props.user.name){
 			this.props.navigation.navigate('CartConfirmed',{});
 		  }
@@ -60,6 +56,10 @@ class LoginCartScreen extends Component {
 			//this.focusListener.remove();
 		}
 	  }
+	  
+	showToast = (msg) => {
+		ToastAndroid.show(msg, ToastAndroid.SHORT);
+	};
 	
 	onSubmitText=()=>{
 		let data = {
@@ -67,7 +67,7 @@ class LoginCartScreen extends Component {
 			password:this.state.password
 		}
 		console.log(data);
-		fetch(apiUrl+"auth/login",{
+		fetch(apiService.apiUrl+"auth/login",{
 				method: 'POST',
 				headers: {
 				  'Accept': 'application/json',
@@ -75,11 +75,13 @@ class LoginCartScreen extends Component {
 				},
 				body: JSON.stringify(data)
 			  }).then(response=>response.json()).then(data=>{
-				  console.log('success data: ', data);
+				   
 				  if(data.status=="success"){
+					apiService.storeUserData(data.user)
 					this.props.userLogin(data.user);
 					this.props.navigation.navigate('CartConfirmed',{});
 				  }else{
+					  this.showToast("আপনার ইমেল অথবা পাসওয়ার্ড সঠিক নয়");
 					  console.log('some thing is wrong with login')
 				  }
 			  }).catch(error=>{
@@ -93,13 +95,13 @@ class LoginCartScreen extends Component {
   render() {
     return (
       <Container>
-		 
+		<HeaderScreen navigation={this.props.navigation} title={"লগ ইন"} />
 			 <ImageBackground source={require('../assets/images/LoginScreen/login_bg.png')} style={styles.backgroundImage}>
 				  <Grid style={{paddingLeft:20,paddingRight:20}}>
 					 
 					<Row style={{marginTop:180}}>
 						<Col>
-							
+							<Icon name="home" onPress={()=>this.props.navigation.navigate("Home")}/>
 						</Col>
 						<Col style={{textAlign:'right'}}>
 							<Button onPress={()=>{this.openUserTypeRegistration()}} style={{backgroundColor:'#D5DED9',width:120,textAlign:'center',paddingLeft:35,borderRadius:30,marginRight:0}}><Text>রেজিস্ট্রেশন</Text></Button>

@@ -39,10 +39,10 @@ class HeaderScreen extends Component {
 		  </Text>
 		  
 		  <Text  style={{justifyContent:'center',color:'yellow',marginTop:5,fontSize:15,textAlign:'right'}}>
-				৳.{this.props.total_price}
+				{this.props.total_price?'৳. '+this.props.total_price:''}
 		  </Text>
 		  <Text  style={{marginLeft:10,justifyContent:'center',color:'#fff'}}>
-		  <Icon name='shopping-basket' color='#fff' onPress={()=>{this.props.navigation.navigate("Stack",{screen:'ShoppingCart',params:{device_id:this.state.uniqueId}})}} />
+		  <Icon name='shopping-basket' color='#fff' onPress={()=>{this.props.navigation.navigate("Stack",{screen:'ShoppingCart'})}} />
 		  </Text>
 		 </View>)}
 		  containerStyle={{

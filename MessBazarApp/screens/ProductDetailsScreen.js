@@ -1,78 +1,94 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, Image, View, ImageBackground, TextInput, TouchableOpacity  } from 'react-native';
+import { StyleSheet, Text, Image, View, ImageBackground, TextInput, TouchableOpacity,ToastAndroid  } from 'react-native';
 import { Container, Header, Footer, FooterTab, Content,Button, Icon } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 import * as api from '../services/apiService';
 import HeaderScreen from './HeaderScreen';
 import DeviceInfo from 'react-native-device-info';
-import NumericInput from 'react-native-numeric-input'
+import { connect, dispatch } from 'react-redux'
+import * as actions from '../services/actions/actions'
+
+
+function mapStateToProps(state){
+	//console.log(' map state cartList',state.cartReducer.cartList);
+	return {
+		cartList:state.cartReducer.cartList,
+		productList: state.productReducer.homepageProductList,
+	}
+}
+
+function mapDispatchToProps(dispatch){
+	return {
+		getCartList:data=>dispatch(actions.getCartList(data))
+	}
+}
 
 class ProductDetailsScreen extends Component {
 	
 	constructor(props) {
 		super(props);
 		 this.state = {
-			  productid: this.props.route.params.productid,
-			  productDetails: [], 
+			  productid: this.props.route.params.product.id,
+			  productDetails: this.props.route.params.product, 
 			  error: false,
 			  uniqueId : DeviceInfo.getUniqueId(),
 			  productImg:api.apiBaseUrl+"assets/images/products/product.png",
 			  product_qnty:0,
-			  product_pcs:0
+			  product_pcs:0,
+			  productList: this.props.productList,
 		   };
 		//console.log('productid: ',this.props.route.params.productid);
 		  
 	  }
 	  
-	 componentDidMount(){
-		  this.getProductDetails();
-		}	  
+	 componentDidMount=()=>{
+		  //this.getProductDetails();
+		}	
+
+	componentDidAppear = () => {
+		console.log('did appear....')
+		//this.getProductDetails();
+	 }
+			
 		
 	componentDidUpdate(){
-		  this.getProductDetails();
+		  //this.getProductDetails();
 		}
 		
 		
 	getProductDetails = async () => {
        try { 
 			   const productid = this.state.productid;
-			   const response = await fetch(api.apiUrl+"productdetails/"+productid);
+			   const response = await fetch(api.apiUrl+"productdetails/"+productid+"/"+this.state.uniqueId);
 			   if (response.ok) {
 				   const data = await response.json();
-				    
+				   this.props.getCartList(data.carts)
 				   this.setState({
-					   productDetails:data
+					   productDetails:data.products
 				   })		   
 			   } else { this.setState({ error: true }) }
 		   } catch (e) { 
 				console.log('error: ',e);
 			}
-	  }
+	 }
 	  
-	  addToCart = async () => {
-       try { 
-			   const response = await fetch(api.apiUrl+"cartadd",{product_id:5});
-			   if (response.ok) {
-				   const data = await response.json();
-				   console.log('response data: ',data);
-				   this.setState({
-					   categoryList:data
-				   })		   
-			   } else { this.setState({ error: true }) }
-		   } catch (e) { 
-				console.log('error: ',e);
-			}
-	  }
-
-
-	
-	  onPressCartAdd=(product)=>{
-		   product = {
+	  
+	onPressCartAdd=(product)=>{
+	 
+		if(product.product_qnty<1){
+			return 0;
+		} 
+		
+	 
+		
+		  product = {
 			  ...product,
 			  device_id: this.state.uniqueId,
-			  product_qnty:this.state.product_qnty
+			  product_qnty:product.product_qnty
 		  };
-		  console.log(product);
+		  
+		  //console.log(product);
+		 
 		  fetch(api.apiUrl+"cartadd",{
 				method: 'POST',
 				headers: {
@@ -81,21 +97,17 @@ class ProductDetailsScreen extends Component {
 				},
 				body: JSON.stringify(product)
 			  }).then(response=>response.json()).then(data=>{
-				  console.log('success data: ', data);
-				  this.props.navigation.navigate('ShoppingCart',{device_id:this.state.uniqueId});
-			  },error=>{
+				  //console.log('cart add success data: ', data.data);
+				  this.props.getCartList(data.data)
+				  this.setState({cartList:this.props.cartList})
+				  this.showToast();
+				this.props.navigation.navigate('ShoppingCart',{device_id:this.state.uniqueId});
+			  }).catch(error=>{
 				  console.log('error: ', error);
 			  }); 
-	  }
-	  
-	  updateProductQnty=(value)=>{
-		  
-		  console.log('updateProductQnty',value);
-		  console.log('state updateProductQnty',this.state.product_qnty);
-	  }
-	  
-	  
-	  	
+		 
+	}
+		  	
 	upQnty=(product)=>{
 		//console.log(product);
 		product.product_qnty = product.product_qnty+1
@@ -106,7 +118,10 @@ class ProductDetailsScreen extends Component {
 	}	
 	
 	downQnty=(product)=>{
-		//console.log(product);
+		 
+		if(product.product_qnty<1){
+			return 0
+		}
 		product.product_qnty = product.product_qnty-1
 		this.setState({
 			product_qnty:this.state.product_qnty-1
@@ -118,47 +133,187 @@ class ProductDetailsScreen extends Component {
 		//console.log(product);
 		product.product_pcs = product.product_pcs+1
 		this.setState({
-			product_pcs:this.state.product_pcs-1
+			product_pcs:this.state.product_pcs+1,
+			// productDetails:{
+				// ...this.state.productDetails, 
+				// product_pcs:this.state.product_pcs
+			// }
 		})
 	 
 	}	
 	
 	downPcs=(product)=>{
+		if(product.product_pcs<1){
+			return 0
+		}
 		//console.log(product);
 		product.product_pcs = product.product_pcs-1
 		this.setState({
-			product_pcs:this.state.product_pcs-1
+			product_pcs:this.state.product_pcs-1,
+			// productDetails:{
+				// ...this.state.productDetails, 
+				// product_pcs:this.state.product_pcs
+			// }
 		})
 	}
+	
+	
+	addToCart=(product)=>{
+		
+		  product = {
+			  ...product,
+			  device_id: this.state.uniqueId
+		  };
+		  
+		  //console.log(product);
+		 
+		  fetch(api.apiUrl+"cartadd",{
+				method: 'POST',
+				headers: {
+				  'Accept': 'application/json',
+				  'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(product)
+			  }).then(response=>response.json()).then(data=>{
+				  console.log('cart add success data: ', data.data);
+				  this.props.getCartList(data.data)
+				  this.setState({cartList:this.props.cartList})
+				  this.showToast();
+				//this.props.navigation.navigate('ShoppingCart',{device_id:this.state.uniqueId});
+			  }).catch(error=>{
+				  console.log('error: ', error);
+			  }); 
+		 
+	}
+	
+	showToast = () => {
+    ToastAndroid.show("Product added to cart successfully !", ToastAndroid.SHORT);
+  };
+   
+   
+	
+	openPreviousCart=()=>{
+		this.props.navigation.navigate('PreviousCart');
+	}
+	
+	onPressOpenLoginCart=()=>{
+			 
+			this.props.navigation.navigate('LoginCart',{device_id:this.state.uniqueID});
+	}
+	
+	onPressOpenProductDetails=(product)=>{
+		this.setState({productDetails:product});
+		//this.props.navigation.navigate('Stack',{screen:'ProductDetails',params:{product:product}});
+	}
+
  
- 
+	 renderProduct=()=>{
+			return this.state.productList.map((product, index)=>{
+				 
+				return(
+					<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',paddingTop:5,paddingBottom:5}}>
+							<Col size={17} style={{justifyContent:'center'}}>
+								<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product)}>
+									<Image source={{uri:api.apiBaseUrl+product.image}} style={{
+										height:45,
+										width:45,
+										marginLeft:5
+									}}/>
+								</TouchableOpacity>
+							</Col>
+							
+							<Col size={83}>
+								<Row>
+									<Col size={90}>
+										<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product)}>
+											<Text style={{fontSize:18,color:'#6E2C00',fontWeight:'bold'}}>
+											{product.product_title}</Text>
+										</TouchableOpacity>
+									</Col>
+									<Col size={15}>
+										<Text  style={{color:'#666'}}>{product.unit_type}</Text>
+									</Col>
+								</Row>
+								<Row>
+									<Col size={55}>
+										<Row >
+											<Col  size={10}>
+												{	product.discount>0?
+													(<Text style={{textDecorationLine: 'line-through'}}>৳{product.sale_price}</Text>):
+													(<Text style={{color:'#109D9D'}}>৳{product.final_sale_price}</Text>)}
+											</Col>
+											
+											<Col  size={10} >
+												{	product.discount>0?
+													(<Text style={{color:'#109D9D'}}>৳{product.final_sale_price}</Text>):
+													(<Text style={{color:'#109D9D'}}></Text>)}
+											</Col>
+										</Row>
+										<Row></Row>
+										{(product.show_pcs_box)?
+											(<Row style={{marginTop:10}}>
+												<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
+													<Text style={{textAlign:'center'}}>
+													<Icon name="remove" onPress={()=>{this.downPcs(product)}} style={{fontSize:18}}/>
+													</Text>
+												</Col>
+												<Col size={5} style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#fcc'}}>
+													<Text style={{textAlign:'center'}}>
+														 {product.product_pcs?product.product_pcs:0} Pcs 
+													</Text>
+												</Col> 
+												<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
+													<Text style={{textAlign:'center'}}>
+													<Icon name="add" onPress={()=>{this.upPcs(product)}} style={{fontSize:18}}/>
+													</Text>
+												</Col>
+											</Row>):(<Text></Text>)}
+										<Row></Row>
+										<Row></Row>
+									</Col>
+									 
+							
+									<Col size={47} style={{justifyContent:'center'}}>
+									
+										<Row>
+											<Col style={{justifyContent:'center'}}>
+												{product.product_qnty?(<Icon name="remove" onPress={()=>{this.downQnty(product)}} 
+													style={styles.lblItemAttrPcsIcon,{marginLeft:'auto',marginRight:3,fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>):(<Text></Text>)}			
+											</Col>
+											<Col style={{justifyContent:'center'}}>
+												{product.product_qnty?(<Text style={{textAlign:'center',borderWidth:1,paddingTop:5,paddingBottom:5,borderColor:'#444',color:'#444',backgroundColor:'#fa9'}}>{product.product_qnty?product.product_qnty:product.product_qnty=0}</Text>):(<Text></Text>)}						
+											</Col>
+											<Col style={{justifyContent:'center'}}>
+												<Icon name="add" onPress={()=>{this.upQnty(product)}} style={styles.lblItemAttrPcsIcon,{fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
+											</Col>
+										</Row>
+									</Col>
+									 
+									 
+								</Row>
+							</Col>
+							
+						
+						</Row>
+						
+				);
+			});
+		}
 	  
 	  
   render() {
     return (
       <Container>
-			<HeaderScreen navigation={this.props.navigation} title={"পণ্যের বিবরণ"} />
+			<HeaderScreen navigation={this.props.navigation}  total_price={this.props.cartList?this.props.cartList.total_final_price:'0.00'} title={"পণ্যের বিবরণ"} />
 			<Content style={styles.maincontent}>
 				<Grid>
 					 
-					<Row>
-						<Col size={10} style={{justifyContent:'center'}}>
-							<Image source={require('../assets/images/ProductDetailsScreen/arrow-left.png')} style={styles.btnArrowTop}/>
-						</Col>
-						 
-						<Col size={75}>
-							 <Image source={require('../assets/images/CategoryScreen/apnar-category.png')}/>
-							<Image source={require('../assets/images/CategoryScreen/Line-9.png')}/>
-						</Col>
-						<Col size={15}  style={{justifyContent:'center'}}>
-							<Image source={require('../assets/images/ProductDetailsScreen/search.png')} style={styles.btnSearchTop}/>
-						</Col>
-					</Row>
+				
 					
 					<Row>
 						<Col>
 							<ImageBackground source={require('../assets/images/ProductDetailsScreen/product-bg.png')} style={styles.productBackground}>
-								<Image source={{uri:`${api.apiBaseUrl}assets/images/products/product.png`}} style={styles.productImage}/>
+								<Image source={{uri:`${api.apiBaseUrl}${this.state.productDetails.image}`}} style={styles.productImage}/>
 							</ImageBackground>
 						</Col>
 						 
@@ -169,7 +324,32 @@ class ProductDetailsScreen extends Component {
 							
 								<Text style={styles.productname}>{this.state.productDetails.product_title}</Text>
 								
-								<Text style={styles.price}>৳{this.state.productDetails.sale_price}</Text>
+							<Row>
+								<Col size={35}>
+								
+									{	this.state.productDetails.discount>0?
+													(<Text style={styles.priceDiscount}>৳{this.state.productDetails.sale_price}</Text>):
+													(<Text style={styles.price}>৳{this.state.productDetails.final_sale_price}</Text>)}
+
+								</Col>
+								<Col size={35}><Text style={styles.price}>৳{this.state.productDetails.final_sale_price}</Text></Col>
+									{}
+									<Col size={30} style={{justifyContent:'center'}}>
+										<Row>
+											<Col style={{justifyContent:'center'}}>
+												<Icon name="remove" onPress={()=>{this.downQnty(this.state.productDetails)}} 
+													style={styles.lblItemAttrPcsIcon,{marginLeft:'auto',marginRight:3,fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
+											</Col>
+											<Col style={{justifyContent:'center'}}>
+												<Text style={{textAlign:'center',borderWidth:1,paddingTop:5,paddingBottom:5,borderColor:'#444',color:'#444'}}>{this.state.productDetails.product_qnty?this.state.productDetails.product_qnty:this.state.productDetails.product_qnty=0}</Text>
+											</Col>
+											<Col style={{justifyContent:'center'}}>
+												<Icon name="add" onPress={()=>{this.upQnty(this.state.productDetails)}} style={styles.lblItemAttrPcsIcon,{fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
+											</Col>
+										</Row>
+									</Col>
+									{}
+							</Row>
 							
 						</Col>
 						 
@@ -187,17 +367,29 @@ class ProductDetailsScreen extends Component {
 					
 					
 					 {(this.state.productDetails.show_pcs_box)?
-						(<Row >
-							<Col size={5}  style={{justifyContent:'center'}}>
-								<Icon name="remove" onPress={()=>{this.downPcs(this.state.productDetails)}} style={{fontSize:20}}/>
+						(<Row style={{paddingLeft:15}}>
+							<Col size={10}  style={{justifyContent:'center'}}>
+								<Icon name="remove" onPress={()=>{this.downPcs(this.state.productDetails)}} style={{
+									fontSize:20,
+									borderRadius:50,
+									backgroundColor:'#eae',
+									borderWidth:1,
+									textAlign:'center',
+									fontWeight:'bold'
+									}}/>
 							</Col>
 							<Col size={12} style={{justifyContent:'center'}}>
-								<Text style={{fontSize:20,textAlign:'center'}}>
+								<Text style={{fontSize:20,textAlign:'center',borderRadius:20,borderWidth:1,backgroundColor:'#f8a'}}>
 									 {this.state.productDetails.product_pcs?this.state.productDetails.product_pcs:0} Pcs 
 								</Text>
 							</Col> 
 							<Col size={10}  style={{justifyContent:'center'}}>
-								<Icon name="add" onPress={()=>{this.upPcs(this.state.productDetails)}} style={{fontSize:20}}/>
+								<Icon name="add" onPress={()=>{this.upPcs(this.state.productDetails)}} style={{fontSize:20,
+									borderRadius:50,
+									backgroundColor:'#eae',
+									borderWidth:1,
+									textAlign:'center',
+									fontWeight:'bold'}}/>
 							</Col>
 							<Col size={40}></Col>
 						</Row>):(<Text></Text>)}
@@ -209,14 +401,12 @@ class ProductDetailsScreen extends Component {
 							<ImageBackground source={require('../assets/images/ProductDetailsScreen/elipse.png')} style={styles.productPageLogoBackground}>
 								
 							 
-								<Row>
-									<Col size={20}>
-									<NumericInput value={this.state.product_qnty} onChange={value =>{this.setState({product_qnty:value})}} />
-									</Col>
-									<Col size={40}>
-											<Button onPress={()=>this.onPressCartAdd(this.state.productDetails)} style={{paddingLeft:20,paddingRight:20,height:45,backgroundColor:'#FF5733'}}>
+								<Row  style={{height:45}}>
+									 
+									<Col size={40} style={{justifyContent:'center'}}>
+											<Button onPress={()=>this.onPressCartAdd(this.state.productDetails)} style={{paddingLeft:20,paddingRight:20,height:45,backgroundColor:'#FF5733',borderRadius:20}}>
 												<Icon name="cart"/>
-												<Text>CART</Text>
+												<Text style={{color:'#fff'}}>CART</Text>
 											</Button>
 									</Col>
 								</Row>
@@ -226,7 +416,15 @@ class ProductDetailsScreen extends Component {
 						</Col>
 						 
 					</Row>
+					
+					<Row style={{marginTop:10,borderBottomWidth:1}}>
+						<Col size={7} style={{justifyContent:'center'}}><Icon name="list"/></Col>
+						<Col size={93} style={{justifyContent:'center',fontSize:15}}>
+							<Text style={{justifyContent:'center',fontSize:15}}>পছন্দের আরও কিছু পণ্য</Text>
+						</Col>
+					</Row>
 					 
+					{this.renderProduct()} 
 					
 				</Grid>
 				   
@@ -237,18 +435,19 @@ class ProductDetailsScreen extends Component {
 			}}>
 				 
 						  <FooterTab>
-							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.openPreviousCart()}}>
-								<Icon name="arrow-back"  style={{color:'#333'}}/>
+							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.props.navigation.navigate('Home')}}>
+								<Icon name="home"  style={{color:'#333'}}/>
 							  <Text>
-								আগের তালিকা
+								হোম
 							  </Text>
 							 
 							</Button>
 							
-							<Button  style={{backgroundColor:'#93FC87'}}>
-							  <Text>TOTAL</Text>
-							  <Text>৳</Text>
+							<Button  onPress={()=>{this.props.navigation.navigate('Category')}} style={{backgroundColor:'#93FC87'}}>
+							  <Icon name="list" style={{color:'#333'}}/>
+							  <Text>ক্যাটাগরি</Text>
 							</Button>
+							
 							<Button onPress={()=>{this.onPressOpenLoginCart()}} style={{backgroundColor:'#009933',color:'#fff'}}>
 							  <Icon name="basket"/>
 							  <Text  style={{color:'#fff'}}>শপিং</Text>
@@ -277,7 +476,7 @@ const styles = StyleSheet.create({
 	  },
 	  productBackground: { 
 		width: '100%',
-		height: 150,
+		height: 180,
 		justifyContent:'center',
 		textAlign: "center",
 		alignItems:'center',
@@ -286,8 +485,8 @@ const styles = StyleSheet.create({
 		 
 	  }, 
 	 productImage: { 
-		width: '60%',
-		height: 120
+		width: '100%',
+		height: 200
 		 
 	  },
 	  btnText: { 
@@ -330,7 +529,13 @@ const styles = StyleSheet.create({
 		  color:'coral',
 		  fontSize:17,
 		  fontWeight:'bold'
+	  }, 
+	  priceDiscount:{
+		  color:'coral',
+		  fontSize:17,
+		  fontWeight:'bold',
+		  textDecorationLine: 'line-through'
 	  }
 });
 
-export default ProductDetailsScreen;
+export default connect(mapStateToProps, mapDispatchToProps)(ProductDetailsScreen);

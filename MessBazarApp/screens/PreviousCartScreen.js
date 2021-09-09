@@ -7,6 +7,21 @@ import NumericInput from 'react-native-numeric-input'
 import HeaderScreen from './HeaderScreen';
 import * as api from '../services/apiService';
 import DeviceInfo from 'react-native-device-info';
+import { connect, dispatch } from 'react-redux' 
+import * as actions from '../services/actions/actions'
+
+function mapStateToProps(state){
+	return {
+		cartList:state.cartReducer.cartList
+	}
+}
+
+function mapDispatchToProps(dispatch){
+	return{
+		getCartList:data=>dispatch(actions.getCartList(data))	
+	}
+	
+}
 
 class PreviousCartScreen extends Component {
 	
@@ -126,14 +141,20 @@ class PreviousCartScreen extends Component {
 		this.updateToCart(this.state.product)
 	}
  
-	updateToCart=(product)=>{
-		//console.log(product);
-		  product = {
-			  ...product,
+	 
+   
+   openCartDetails=(cart_id)=>{
+	   this.props.navigation.navigate('PreviousCartList',{cart_id});
+   }
+   
+   openCartDetailsPrepare=(cart_id)=>{
+	   //this.props.navigation.navigate('Stack',{screen:'PrepareCartList',params:{cart_id}});
+	     product = {
+			  cart_id:cart_id,
 			  device_id: this.state.uniqueId
 		  };
 		 
-		  fetch(api.apiUrl+"cartupdate",{
+		  fetch(api.apiUrl+"cartaddprepare",{
 				method: 'POST',
 				headers: {
 				  'Accept': 'application/json',
@@ -141,17 +162,13 @@ class PreviousCartScreen extends Component {
 				},
 				body: JSON.stringify(product)
 			  }).then(response=>response.json()).then(data=>{
-				  // console.log('cart add success data: ', data);
-				  this.showToast("Product added to cart list!");
-				//this.props.navigation.navigate('ShoppingCart',{device_id:this.state.uniqueId});
-			  },error=>{
+				  console.log('cart add success data: ', data);
+				  this.props.getCartList(data.data)
+				  this.showToast("Previous cart is added to cart list!");
+				  this.props.navigation.navigate('PrepareCartList',{cart_id:this.props.cartList.id});
+			  }).catch(error=>{
 				  console.log('error: ', error);
 			  }); 
-		 
-	}
-   
-   openCartDetails=(cart_id)=>{
-	   this.props.navigation.navigate('PreviousCartList',{cart_id});
    }
    
 		
@@ -163,7 +180,7 @@ class PreviousCartScreen extends Component {
 			
 					<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',padding:5,paddingBottom:5,paddingLeft:10}}>
 						
-						<Col size={10} style={{justifyContent:'center'}}>
+						<Col size={5} style={{justifyContent:'center'}}>
 							<Text>{cartitem.id}</Text>
 						</Col>
 						
@@ -185,9 +202,10 @@ class PreviousCartScreen extends Component {
 						
 						<Col size={10}>
 							<Text style={{fontSize:20}}>
-								<Icon name="arrow-right" onPress={()=>{this.openCartDetails(cartitem.id)}} />
+								<Icon name="list"  color={'chocolate'} onPress={()=>{this.openCartDetails(cartitem.id)}} />
 							</Text>
 						</Col>
+						
 						
 					
 					</Row>
@@ -217,11 +235,11 @@ class PreviousCartScreen extends Component {
   render() {
     return (
       <Container>
-			<HeaderScreen navigation={this.props.navigation} title={"PREVIOUS CART"} />
+			<HeaderScreen navigation={this.props.navigation} title={"আগের বাজার"} />
 			<Content style={styles.contentBar}>
 				<Grid>
 				
-					<Row  style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',padding:5,paddingBottom:5,paddingLeft:10}}>
+					<Row  style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'lime',padding:5,paddingBottom:5,paddingLeft:10}}>
 						
 						<Col size={10} style={{justifyContent:'center'}}>
 							<Text>Cart ID</Text>
@@ -336,4 +354,4 @@ const styles = StyleSheet.create({
 	 
 });
 
-export default PreviousCartScreen;
+export default connect(mapStateToProps, mapDispatchToProps)(PreviousCartScreen);

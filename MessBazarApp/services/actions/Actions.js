@@ -32,3 +32,31 @@ export function getCartList(payload){
 	}
 }
 
+export function getBigopti(payload){
+	return {
+		type: types.GET_BIGOPTI,	
+		payload
+	}
+}
+
+export function getOffer(payload){
+	return {
+		type: types.GET_OFFER,	
+		payload
+	}
+}
+
+export function getCoupon(payload){
+	return {
+		type: types.GET_COUPON,	
+		payload
+	}
+}
+
+export function getSettings(payload){
+	return {
+		type: types.GET_SETTINGS,	
+		payload
+	}
+}
+

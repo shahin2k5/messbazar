@@ -84,16 +84,14 @@ class CategoryScreen extends Component {
 
 	renderCategory=()=>{
 		return this.props.categoryList.map((category, index)=>{
-			var icon = category.image;
 			return(
-				<TouchableOpacity key={index} style={styles.button} onPress={()=>this.onPressOpen(category.id)} >
+				<TouchableOpacity key={index} style={{width:'26%',marginVertical:10,marginHorizontal:10}} onPress={()=>this.onPressOpen(category.id)} >
 					<View style={styles.btnBackground,{backgroundColor:'#a6Fcc6',borderRadius:20,elevation:9,height:70}} >
 						<Image source={{uri:(api.apiBaseUrl)+category.image}} style={{marginLeft:'38%',height:30,width:30,marginTop:10}}/>
 						
 						<Text style={styles.btnTitle}>{category.category_title.substr(0,10)}</Text>
 					</View>
-				</TouchableOpacity>
-			 
+				</TouchableOpacity> 
 			);
 		});
 	}
@@ -113,11 +111,15 @@ class CategoryScreen extends Component {
   }
   
   onPressOpen=(categoryID)=>{
-	  this.props.navigation.navigate('SubCategory',{category:categoryID});
+	  // if(categoryID==1){   
+		  // this.props.navigation.navigate('Stack',{screen:'ProductList',params:{subcategory:1}})
+	  // }else{
+		  this.props.navigation.navigate('Stack',{screen:'SubCategory',params:{category:categoryID}});
+	  // }
   }
   
    onPressOpenProductDetails=(productid)=>{
-		  this.props.navigation.navigate('ProductDetails',{productid:productid});
+		  this.props.navigation.navigate('ProductDetails',{product:productid});
 	  }
   
   searchCategory=(txt)=>{
@@ -203,7 +205,7 @@ class CategoryScreen extends Component {
 			return(
 				<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',paddingTop:5,paddingBottom:5}}>
 						<Col size={17} style={{justifyContent:'center'}}>
-							<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product.id)}>
+							<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product)}>
 								<Image source={{uri:api.apiBaseUrl+product.image}} style={{
 									height:45,
 									width:45,
@@ -215,7 +217,7 @@ class CategoryScreen extends Component {
 						<Col size={83}>
 							<Row>
 								<Col size={90}>
-									<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product.id)}>
+									<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product)}>
 										<Text style={styles.productTitle}>
 										{product.product_title}</Text>
 									</TouchableOpacity>
@@ -283,7 +285,9 @@ class CategoryScreen extends Component {
 		});
 	}
 	
-	
+	openPreviousCart=()=>{
+		this.props.navigation.navigate('PreviousCart');
+	}
   
   render() {
     return (
@@ -304,14 +308,10 @@ class CategoryScreen extends Component {
 							 
 								<Row>
 								<Col style={{justifyContent:'center',width:'60%'}}>
-									<TouchableOpacity onPress={()=>{this.props.navigation.navigate("ShoppingCart",{device_id:this.state.uniqueId})}}>
-										 
-										<Text style={{textAlign:'right'}}>বাজারের তালিকা</Text>
-										
-									</TouchableOpacity>
+									 
 								</Col>
 								<Col style={{justifyContent:'center',width:'30%',paddingLeft:5}}>
-									<Icon name="list"/>
+									 
 								</Col>
 								</Row>
 						</Col>
@@ -324,6 +324,8 @@ class CategoryScreen extends Component {
 					 
 					
 					<Row style={{flex:1, flexDirection:'row', flexWrap:'wrap',marginTop:5,marginLeft:5}}>
+					
+				
 						{this.renderCategory()}
 					</Row>
 					
@@ -346,10 +348,11 @@ class CategoryScreen extends Component {
 							 
 							</Button>
 							
-							<Button  style={{backgroundColor:'#93FC87'}}>
-							  <Text>TOTAL</Text>
-							  <Text>৳ {this.props.cartList.total_final_price}</Text>
+							<Button  onPress={()=>{this.openPreviousCart()}} style={{backgroundColor:'#93FC87'}}>
+							  <Icon name="calendar" style={{color:'#333'}}/>
+							  <Text>পূর্বের বাজার</Text>
 							</Button>
+							
 							<Button style={{backgroundColor:'#009933',color:'#fff'}}  onPress={()=>{this.props.navigation.navigate("Stack",{screen:'ShoppingCart',params:{device_id:this.state.uniqueId}})}} >
 							  <Icon name="basket"/>
 							  <Text  style={{color:'#fff'}}>শপিং</Text>

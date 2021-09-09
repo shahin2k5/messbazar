@@ -1,30 +1,26 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, Image, View, ImageBackground, TextInput,TouchableOpacity  } from 'react-native';
-import { Container, Header, Footer, FooterTab, Content, Item, Input, Icon , Button} from 'native-base';
+import { Container, Header, Footer, FooterTab, Content, Input, Icon , Button} from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
 import HeaderScreen from './HeaderScreen';
 import DeviceInfo from 'react-native-device-info';
 import { connect, dispatch } from 'react-redux'
-import { apiUrl, getCategoryAll } from '../services/apiService';
+import { apiUrl } from '../services/apiService';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as actions from '../services/actions/actions'
 
 
-const RadioButton = ({ onPress, selected, children }) => {
-			  return (
-				<View style={styles.radioButtonContainer}>
-				  <TouchableOpacity onPress={onPress} style={styles.radioButton}>
-					{selected ? <View style={styles.radioButtonIcon} /> : null}
-				  </TouchableOpacity>
-				  <TouchableOpacity onPress={onPress}>
-					<Text style={styles.radioButtonText}>{children}</Text>
-				  </TouchableOpacity>
-				</View>
-			  );
-			};
+ 
+function mapDispatchToProps(dispatch){
+	return { 
+			getCartList:data=>dispatch(actions.getCartList(data))
+	}
+}
 
 function mapStateToProps(state){
-	console.log('map user cart confirmed: ', state.userReducer.user)
 	return {
-		user:state.userReducer.user
+		user:state.userReducer.user,
+		cartList:state.cartReducer.cartList
 	}
 }
 			
@@ -50,6 +46,9 @@ class CartConfirmedScreen extends Component {
 				mess_member:this.props.user.mess_member,
 				branch_name:this.props.user.branch_name,
 				payment_method:'',
+				dTime:'',
+				chosenDate: new Date(),
+				showTime:false
 		 
 		}
 	}
@@ -57,11 +56,11 @@ class CartConfirmedScreen extends Component {
 	
 	
 
-	onRadioBtnClick = (item) => {
-			let updatedState = this.state.isLiked.map((isLikedItem) =>
-			  isLikedItem.id === item.id
-				? { ...isLikedItem, selected: true }
-				: { ...isLikedItem, selected: false }
+	onRadioBtnClick = (View) => {
+			let updatedState = this.state.isLiked.map((isLikedView) =>
+			  isLikedView.id === View.id
+				? { ...isLikedView, selected: true }
+				: { ...isLikedView, selected: false }
 			);
 			setIsLiked(updatedState);
 		  };
@@ -99,7 +98,8 @@ class CartConfirmedScreen extends Component {
 	 
 		  let data = {
 			  device_id:this.state.device_id,
-			  user_id: this.state.user_id,
+			  cart_id:this.props.cartList.id,
+			  user_id: this.props.user.id,
 			  house_mess_name:this.state.house_mess_name,
 			  user_full_name:this.state.user_full_name,
 			  full_address:this.state.full_address,
@@ -107,9 +107,10 @@ class CartConfirmedScreen extends Component {
 			  user_type:this.state.user_type,
 			  branch_name:this.state.branch_name,
 			  payment_method:this.state.payment_method,
-			  token: this.state.user.token
+			  token: this.state.user.token,
+			  delivery_time:this.state.chosenDate
 		  }
-		  console.log('cart confired before: ',data);
+		  
 		  
 		  fetch(apiUrl+"cartconfirm",{
 				method: 'POST',
@@ -123,6 +124,7 @@ class CartConfirmedScreen extends Component {
 				  console.log('order success data: ', data);
 				  if(data.status=="success"){
 					//this.props.userLogin(data.user);
+					this.props.getCartList([]);
 					this.props.navigation.navigate('CartSuccess',{orderid:data.data.id});
 				  }else{
 					  console.log('some thing is wrong with order confirm')
@@ -138,62 +140,76 @@ class CartConfirmedScreen extends Component {
 		dTime = dTime.setHours(dTime.getHours() + 2); 
 		return new Date(dTime).toLocaleString();
 	}
+
+	showTime=()=>{
+		this.setState({
+			showTime:true
+		})
+	}
+
+	setDate=(event, newTime)=>{
+		console.log('time: ',newTime)
+		this.setState({chosenDate: newTime,
+			showTime:false
+		})
+	}
 	
   render() {
 
     return (
       <Container>
-			<HeaderScreen navigation={this.props.navigation} title={"CART CONFIRM"} />
+			<HeaderScreen navigation={this.props.navigation} title={"কনফার্ম অর্ডার"} total_price={this.props.cartList?this.props.cartList.total_final_price:'0.00'}/>
 			<Content style={styles.contentBar}>
 				<Grid>
 					<Row>
 						 
 						<Col >
-							<Item style={styles.lineItemHead}>
+							<View style={styles.lineViewHead}>
 						 
 								<Text style={styles.bgTxt}>DELIVERY ADDRESS</Text>
-							</Item>
+							</View>
 						</Col>	
 					</Row>
 					
 					<Row>
 						 
 						<Col >
-							<Item style={styles.lineItem}>
+							<View style={styles.lineView}>
 								
-								<Icon type={"FontAwesome"} active name='inbox' />
-								<Text>Email: {this.props.user ? this.props.user.email:'Email not found!'}</Text>
-							</Item>
+								<Icon type={"FontAwesome"} style={{width:35}} active name='inbox' />
+								<Text style={{width:'32%'}}>Email: </Text>
+								<Text> {this.props.user ? this.props.user.email:'Email not found!'}</Text>
+							</View>
 						</Col>	
 					</Row>
 					
 					<Row>
 						 
 						<Col >
-							<Item style={styles.lineItem}>
+							<View style={styles.lineView}>
 								
-								<Icon type={"FontAwesome"} active name='university' />
-								<Text>বাসার নাম/মেসের নাম</Text>
-								<TextInput 
+								<Icon type={"FontAwesome"} style={{width:35}} active name='university' />
+								<Text style={{width:'32%'}}>বাসার/মেসের নাম</Text>
+								<TextInput style={{borderBottomWidth:1,width:'55%'}}
 									value={this.state.house_mess_name} 
 									onChangeText={text=>this.getHouseMessName(text)} 
 									placeholder="বাসার নাম/মেসের নাম" />
-							</Item>
+							</View>
 						</Col>	
 					</Row>
 					
 					<Row>
 						 
 						<Col >
-							<Item style={styles.lineItem}>
+							<View style={styles.lineView}>
 								
-								<Icon type={"FontAwesome"} active name='user' />
-								<Text>ব্যবহারকারীর নাম</Text>
-								<TextInput 
+								<Icon type={"FontAwesome"} style={{width:35}} active name='user' />
+								<Text style={{width:'32%'}}>ব্যবহারকারীর নাম</Text>
+								<TextInput style={{borderBottomWidth:1,width:'55%'}}
 									value={this.state.user_full_name} 
 									onChangeText={text=>this.getUserFullName(text)} 
 									placeholder="ব্যবহারকারীর নাম" />
-							</Item>
+							</View>
 						</Col>	
 					</Row>
 					
@@ -201,103 +217,54 @@ class CartConfirmedScreen extends Component {
 					<Row>
 						 
 						<Col >
-							<Item style={styles.lineItem}>
-								<Icon type={"FontAwesome"} active name='address-card' />
-								<Text>ঠিকানা</Text>
-								<TextInput value={this.state.full_address}  onChangeText={text=>this.getFullAddress(text)} placeholder="ঠিকানা" />
-							</Item>
+							<View style={styles.lineView}>
+								<Icon type={"FontAwesome"} style={{width:35}} active name='address-card' />
+								<Text style={{width:'32%'}}>ঠিকানা</Text>
+								<TextInput style={{borderBottomWidth:1,width:'55%'}}value={this.state.full_address}  onChangeText={text=>this.getFullAddress(text)} placeholder="ঠিকানা" />
+							</View>
 						</Col>	
 					</Row>
 					
-					 
-				 
-					
-					 
 					<Row>
 						 
 						<Col >
-							<Item style={styles.lineItem}>
-								<Icon type={"FontAwesome"} active name='telegram' />
-								<Text>মোবাইল</Text>
-								<TextInput  value={this.state.user_mobile}  onChangeText={text=>this.getUserMobile(text)} placeholder="মোবাইল" />
-							</Item>
+							<View style={styles.lineView}>
+								<Icon type={"FontAwesome"} style={{width:35}} active name='telegram' />
+								<Text style={{width:'32%'}}>মোবাইল</Text>
+								<TextInput style={{borderBottomWidth:1,width:'55%'}} value={this.state.user_mobile}  onChangeText={text=>this.getUserMobile(text)} placeholder="মোবাইল" />
+							</View>
 						</Col>	
 					</Row>
 					
 						 
-					<Row>
-						 
-						<Col >
-							<Item style={styles.lineItem}>
-								<Icon type={"FontAwesome"} active name='server' />
-								<Text>ব্যবহারকারীর ধরণ</Text>
-								<TextInput  value={this.state.user_type}  onChangeText={text=>this.getUserType(text)} placeholder="ব্যবহারকারীর ধরণ" />
-							</Item>
-						</Col>	
-					</Row>
-					
-						<Row>
-						 
-						<Col >
-							<Item style={styles.lineItem}>
-								<Icon type={"FontAwesome"} active name='codiepie' />
-								<Text>ব্র্যাঞ্চ নাম</Text>
-								<TextInput  value={this.state.branch_name}  onChangeText={text=>this.getBranchName(text)} placeholder="ব্র্যাঞ্চ নাম" />
-							</Item>
-						</Col>	
-					</Row>
+				
 					
 					
 					<Row style={{marginTop:30}}>
 						<Col style={{justifyContent:'center'}}>
 							<Text style={{fontSize:21,color:'green', textAlign:'center'}}>বাজার পৌছানোর সময়:</Text>
-							<Text style={{fontSize:21,color:'green',textAlign:'center'}}> { this.dTime() }</Text>
+							<Text style={{fontSize:21,color:'green',textAlign:'center'}} onPress={()=>this.showTime()}>
+								{ this.state.chosenDate.toLocaleTimeString() }
+								<Icon name="chevron-down" onPress={()=>this.showTime()}/>
+							</Text>
 							
+							<Text style={{fontSize:21,color:'green',textAlign:'center'}}>
+								{this.state.showTime && (<DateTimePicker
+									testID="dateTimePicker"
+									value={this.state.chosenDate}
+									mode={"time"}
+									is24Hour={false}
+									display="clock"
+									onChange={this.setDate}
+								/>)}
+							
+							</Text>
+
+								
 						</Col>
 					</Row>
-					{/****
-					<Row>
-						 
-						<Col >
-							<Item>
-							 
-								<Text style={styles.bgTxt}>PAYMENT METHOD</Text>
-							</Item>
-						</Col>	
-					</Row>
-					
-				<Row style={{marginTop:20}}>	 
-					<Col >	
-						 <View style={styles.radioButtonContainer}>
-						   <TouchableOpacity onPress={() =>{this.getPaymentMethod('bkash')}} style={styles.radioButton}>
-							 <View style={styles.radioButtonIcon} />
-						   </TouchableOpacity>
-						   <TouchableOpacity onPress={() => {this.getPaymentMethod('bkash')}}>
-							 <Text style={styles.radioButtonText}>BKASH</Text>
-						   </TouchableOpacity>
-						 </View>					
-					</Col>
-				</Row>
-				
-				
-							
-				<Row  style={{marginTop:10}}>	 
-					<Col>	
-						 <View style={styles.radioButtonContainer}>
-						   <TouchableOpacity onPress={() => {this.getPaymentMethod('cash')}} style={styles.radioButton}>
-							 <View style={styles.radioButtonIcon} />
-						   </TouchableOpacity>
-						   <TouchableOpacity onPress={() => {this.getPaymentMethod('cash')}}>
-							 <Text style={styles.radioButtonText}>CASH ON DELIVERY</Text>
-						   </TouchableOpacity>
-						 </View>					
-					</Col>
-				</Row>
-						 
-						**/}	
-				 
-				 
-				 
+					 
+ 
 					
 				</Grid>
 				   
@@ -306,17 +273,16 @@ class CartConfirmedScreen extends Component {
 				<Footer style={{backgroundColor:'#93FC87'}}>
 				 
 						  <FooterTab>
-							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.openPreviousCart()}}>
-								<Icon name="arrow-back"  style={{color:'#333'}}/>
+							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.props.navigation.navigate('Home')}}>
+								<Icon name="home"  style={{color:'#333'}}/>
 							  <Text>
-								আগের তালিকা
+								হোম
 							  </Text>
-							 
 							</Button>
 							
 							<Button  style={{backgroundColor:'#93FC87'}}>
-							  <Text>TOTAL</Text>
-							  <Text>৳</Text>
+							  <Text style={{width:'40%'}}>TOTAL</Text>
+							  <Text style={{width:'40%'}}>৳ {this.props.cartList.total_final_price}</Text>
 							</Button>
 							<Button onPress={()=>this.confirmedCarts()} style={{backgroundColor:'#009933',color:'#fff'}}>
 							  <Icon name="cart"/>
@@ -341,35 +307,14 @@ const styles = StyleSheet.create({
 		width:'100%',
 		fontWeight:'bold'
 	},
-	 radioButtonContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 45
-  },
-  radioButton: {
-    height: 20,
-    width: 20,
-    backgroundColor: "#F8F8F8",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#E6E6E6",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  radioButtonIcon: {
-    height: 14,
-    width: 14,
-    borderRadius: 7,
-    backgroundColor: "#98CFB6"
-  },
-  radioButtonText: {
-    fontSize: 16,
-    marginLeft: 16
-  },
-  lineItem:{
-	  height:40
+
+  lineView:{
+	  height:40,
+	  marginVertical:7,
+	  flexDirection:'row',
+	  justifyContent:'flex-start'
   }
 	 
 });
 
-export default connect(mapStateToProps)(CartConfirmedScreen);
+export default connect(mapStateToProps,mapDispatchToProps)(CartConfirmedScreen);

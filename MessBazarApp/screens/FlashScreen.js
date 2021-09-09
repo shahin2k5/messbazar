@@ -30,11 +30,19 @@ class FlashScreen extends Component {
 
 	componentDidMount(){
 		setTimeout(()=>{
-			this.props.navigation.navigate('Category');
+			this.props.navigation.navigate('Stack',{screen:'Home'});
 		 },3000);
 	}
+	
+	componentDidUpdate(){
+		setTimeout(()=>{
+			this.props.navigation.navigate('Stack',{screen:'Home'});
+		 },3000);
+	}
+	
+	
 	onPressOpen=()=>{
-		this.props.navigation.navigate('Category');
+		this.props.navigation.navigate('Stack',{screen:'Home'});
 	}
 	
  
@@ -43,15 +51,15 @@ class FlashScreen extends Component {
     return (
       <Container>
 		
-			 <ImageBackground source={require('../assets/images/home_bg.jpg')} style={styles.backgroundImage}>
+			 <ImageBackground source={require('../assets/images/home_bg.jpg')} style={styles.backgroundImage} onPress={()=>this.onPressOpen()}>
 			 
-					<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+					{/*****<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
 						<Image source={require('../assets/images/logo.png')}/>
 					</View>
 					<TouchableOpacity onPress={()=>this.onPressOpen()} >
 								<Image source={require('../assets/images/vegetables-1.png')}/>
 					</TouchableOpacity>
-					{/*****<Row>
+					<Row>
 						<Col><Button onPress={this.props.decreaseValue}><Text style={{width:80}}>-</Text></Button></Col>
 						<Col><Text>{this.props.myCounter}</Text></Col>
 						<Col><Button onPress={this.props.increaseValue}><Text style={{width:80}}>+</Text></Button></Col>

@@ -54,7 +54,7 @@ class ProductListScreen extends Component {
 			   const response = await fetch(api.apiUrl+"product/list/"+subcatid);
 			   if (response.ok) {
 				   const data = await response.json();
-				   console.log('response data: ',data);
+				   console.log('ProductList response data: ',data);
 				   this.setState({
 					   productList:data
 				   })		   
@@ -71,7 +71,7 @@ class ProductListScreen extends Component {
 			return(
 				<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',paddingTop:5,paddingBottom:5}}>
 						<Col size={17} style={{justifyContent:'center'}}>
-							<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product.id)}>
+							<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product)}>
 								<Image source={{uri:api.apiBaseUrl+product.image}} style={{
 									height:45,
 									width:45,
@@ -83,7 +83,7 @@ class ProductListScreen extends Component {
 						<Col size={83}>
 							<Row>
 								<Col size={90}>
-									<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product.id)}>
+									<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product)}>
 										<Text style={styles.productTitle}>
 										{product.product_title}</Text>
 									</TouchableOpacity>
@@ -109,20 +109,24 @@ class ProductListScreen extends Component {
 									</Row>
 									<Row></Row>
 									
-									 {(product.show_pcs_box)?
-										(<Row >
-											<Col size={5}  style={{justifyContent:'center'}}>
-												<Icon name="remove" onPress={()=>{this.downPcs(product)}} style={{fontSize:18}}/>
-											</Col>
-											<Col size={8} style={{justifyContent:'center'}}>
-												<Text>
-													 {product.product_pcs?product.product_pcs:0} Pic 
-												</Text>
-											</Col> 
-											<Col size={10}  style={{justifyContent:'center'}}>
-												<Icon name="add" onPress={()=>{this.upPcs(product)}} style={{fontSize:18}}/>
-											</Col>
-										</Row>):(<Text></Text>)}
+									{(product.show_pcs_box)?
+									(<Row style={{marginTop:10}}>
+										<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
+											<Text style={{textAlign:'center'}}>
+											<Icon name="remove" onPress={()=>{this.downPcs(product)}} style={{fontSize:18}}/>
+											</Text>
+										</Col>
+										<Col size={5} style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#fcc'}}>
+											<Text style={{textAlign:'center'}}>
+												 {product.product_pcs?product.product_pcs:0} Pcs 
+											</Text>
+										</Col> 
+										<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
+											<Text style={{textAlign:'center'}}>
+											<Icon name="add" onPress={()=>{this.upPcs(product)}} style={{fontSize:18}}/>
+											</Text>
+										</Col>
+									</Row>):(<Text></Text>)}
 									<Row></Row>
 									<Row></Row>
 								</Col>
@@ -131,12 +135,12 @@ class ProductListScreen extends Component {
 								<Col size={47} style={{justifyContent:'center'}}>
 								
 									<Row>
-									
 										<Col style={{justifyContent:'center'}}>
-											<Icon name="remove" onPress={()=>{this.downQnty(product)}} style={styles.lblItemAttrPcsIcon,{marginLeft:'auto',marginRight:3,fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
+											{product.product_qnty?(<Icon name="remove" onPress={()=>{this.downQnty(product)}} 
+												style={styles.lblItemAttrPcsIcon,{marginLeft:'auto',marginRight:3,fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>):(<Text></Text>)}			
 										</Col>
 										<Col style={{justifyContent:'center'}}>
-											<Text style={{textAlign:'center',borderWidth:1,paddingTop:5,paddingBottom:5,borderColor:'#444',color:'#444'}}>{product.product_qnty?product.product_qnty:product.product_qnty=0}</Text>
+											{product.product_qnty?(<Text style={{textAlign:'center',borderWidth:1,paddingTop:5,paddingBottom:5,borderColor:'#444',color:'#444'}}>{product.product_qnty?product.product_qnty:product.product_qnty=0}</Text>):(<Text></Text>)}						
 										</Col>
 										<Col style={{justifyContent:'center'}}>
 											<Icon name="add" onPress={()=>{this.upQnty(product)}} style={styles.lblItemAttrPcsIcon,{fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
@@ -167,6 +171,9 @@ class ProductListScreen extends Component {
 	
 	downQnty=(product)=>{
 		//console.log(product);
+		if(product.product_qnty<1){
+			return 0
+		}
 		product.product_qnty = product.product_qnty-1
 		this.setState({
 			product_qnty:this.state.product_qnty-1
@@ -185,6 +192,9 @@ class ProductListScreen extends Component {
 	
 	downPcs=(product)=>{
 		//console.log(product);
+		if(product.product_pcs<1){
+			return 0
+		}
 		product.product_pcs = product.product_pcs-1
 		this.setState({
 			product_pcs:this.state.product_pcs-1
@@ -221,12 +231,12 @@ class ProductListScreen extends Component {
 	}
 	
 	showToast = () => {
-    ToastAndroid.show("Product added to cart successfully !", ToastAndroid.SHORT);
-  };
+		ToastAndroid.show("Product added to cart successfully !", ToastAndroid.SHORT);
+	};	
   
 	
 	  onPressOpenProductDetails=(productid)=>{
-		  this.props.navigation.navigate('ProductDetails',{productid:productid});
+		  this.props.navigation.navigate('ProductDetails',{product:productid});
 	  }
 	  
 	  onPressCartAdd=(product)=>{
@@ -259,7 +269,13 @@ class ProductListScreen extends Component {
 			<Content style={styles.contentBar}>
 				<Grid>
 				
-					{this.renderProduct()}
+					{this.state.productList.length>0?this.renderProduct():(
+						<Row>
+							<Col style={{justifyContent:'center',marginTop:100}}>
+								<Text style={{justifyContent:'center',textAlign:'center'}}>No products are available</Text>
+							</Col>
+						</Row>
+					)}
 					
 				</Grid>
 				   
@@ -279,8 +295,8 @@ class ProductListScreen extends Component {
 							</Button>
 							
 							<Button  style={{backgroundColor:'#93FC87'}}>
-							  <Text>TOTAL</Text>
-							  <Text>৳.{this.props.cartList.total_final_price}</Text>
+							  <Text></Text>
+							  <Text></Text>
 							</Button>
 							<Button onPress={()=>{this.props.navigation.navigate('Stack',{screen:'ShoppingCart',params:{device_id:this.state.uniqueId}})}} style={{backgroundColor:'#009933',color:'#fff'}}>
 							  <Icon name="basket"/>

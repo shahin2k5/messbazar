@@ -1,7 +1,11 @@
 import * as types from '../actions/action-types'
 
 const initialState = {
-	user:[]
+	user:[],
+	bigopti: [],
+	offer: [],
+	coupon: [],
+	settings: [],
 }
 
 const userReducer=(state=initialState, actions)=>{
@@ -11,6 +15,26 @@ const userReducer=(state=initialState, actions)=>{
 			return {
 				...state,
 				user:actions.payload
+			}
+		case (types.GET_BIGOPTI):
+			return {
+				...state,
+				bigopti:actions.payload
+			}
+		case (types.GET_OFFER):
+			return {
+				...state,
+				offer:actions.payload
+			}
+		case (types.GET_COUPON):
+			return {
+				...state,
+				coupon:actions.payload
+			}
+		case (types.GET_SETTINGS):
+			return {
+				...state,
+				settings:actions.payload
 			}
 		default:
 			return state;

@@ -19,12 +19,17 @@ class CartSuccessScreen extends React.Component {
 render(){
   return (
    <Container>
-			<HeaderScreen navigation={this.props.navigation} title={"CART SUCCESS"} />
+			<HeaderScreen navigation={this.props.navigation} title={"অর্ডার সফল"} />
 			<Content style={styles.contentBar}>
 				<View style={{justifyContent:'center'}}>
-					<Text style={{textAlign:'center',color:'green',fontSize:20,marginTop:50}}><Icon name="md-checkmark-outline" active style={{color:'green'}} /></Text>
-					<Text style={{textAlign:'center',color:'green',fontSize:20,marginTop:50}}>Order has been completed successfully!</Text>
-					<Text style={{textAlign:'center',color:'green',fontSize:20,marginTop:50}}>Thank you</Text>
+					<Text style={{textAlign:'center',color:'green',fontSize:20,marginTop:100}}>অর্ডারটি সফলভাবে সম্পন্ন হয়েছে!</Text>
+					<Text style={{textAlign:'center',color:'green',fontSize:20,marginTop:10}}>ধন্যবাদ</Text>
+				<Text style={{textAlign:'center',
+								color:'#fff',
+								fontSize:30,
+								marginTop:50,backgroundColor:'coral',padding:10}}>
+									<Icon name="md-checkmark" style={{height:40,width:40,marginTop:40,fontWeight:'bold',fontSize:30}} active style={{color:'green'}} /></Text>
+					
 				</View>
 			</Content>
 			 <Row  style={{marginTop:20}}>
@@ -47,21 +52,20 @@ render(){
 			}}>
 				 
 						  <FooterTab>
-							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.openPreviousCart()}}>
-								<Icon name="arrow-back"  style={{color:'#333'}}/>
+							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.props.navigation.navigate('Home')}}>
+							  <Icon name="home"  style={{color:'#333'}}/>
 							  <Text>
-								আগের তালিকা
+								হোম
 							  </Text>
 							 
 							</Button>
 							
 							<Button  style={{backgroundColor:'#93FC87'}}>
-							  <Text>TOTAL</Text>
-							  <Text>৳</Text>
+							  
 							</Button>
-							<Button onPress={()=>this.confirmedCarts()} style={{backgroundColor:'#009933',color:'#fff'}}>
-							  <Icon name="cart"/>
-							  <Text  style={{color:'#fff'}}>কনফার্ম অর্ডার</Text>
+							<Button   style={{backgroundColor:'#009933',color:'#fff'}}>
+							   
+							  <Text  style={{color:'#fff'}}></Text>
 							</Button>
 						  </FooterTab>
 			</Footer>

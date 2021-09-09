@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, Image, View, ImageBackground, TouchableOpacity, TextInput, ToastAndroid  } from 'react-native';
+import { StyleSheet, Text, Image, View, ImageBackground, 
+		 TouchableOpacity, TextInput, ToastAndroid  } from 'react-native';
 import { Container, Header, Content, Button, Footer, FooterTab, Icon } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
  
@@ -12,7 +13,8 @@ import * as actions from '../services/actions/actions'
 
 function mapStateToProps(state){
 	return {
-		cartList:state.cartReducer.cartList
+		cartList:state.cartReducer.cartList,
+		user:state.userReducer.user
 	}
 }
 
@@ -28,12 +30,10 @@ class ShoppingCartScreen extends Component {
 	
 	constructor(props) {
 		super(props);
-		let uniqueId = this.props.route.params.device_id?
-		               this.props.route.params.device_id:DeviceInfo.getUniqueId();
+		let uniqueId = DeviceInfo.getUniqueId();
 		 this.state = {
 			  device_id: uniqueId,
 			  cartList: this.props.cartList, 
-			  
 			  error: false,
 			  totalSalePrice:0,
 			  totalDiscountPrice:0,
@@ -42,12 +42,17 @@ class ShoppingCartScreen extends Component {
 			  product_pcs:'0',
 		   };
 		let totalPrice;
-		//console.log('productid: ',this.props.route.params.productid);
+		let isMount = false
+ 
 		  
 	  }
 
 	 componentDidMount(){
+		  isMount = true
 		  this.getCurrentCartList();
+		}	
+	 componentWillUnMount(){
+		  isMount = false
 		}	  
 		
 	componentDidUpdate(){
@@ -62,9 +67,10 @@ class ShoppingCartScreen extends Component {
 			   if (response.ok) {
 				   const data = await response.json();
 				    
-				   this.setState({
-					   cartList:data
-				   })		   
+					   this.setState({
+						   cartList:data
+					   })		   
+				   
 			   } else { this.setState({ error: true }) }
 		   } catch (e) { 
 				console.log('error: ',e);
@@ -124,6 +130,11 @@ class ShoppingCartScreen extends Component {
 		this.setState({
 			product_qnty:this.state.product_qnty-1
 		})
+		
+		if(product.product_qnty<1){
+			this.removeCartItem(product.id);
+			return 0
+		}
 		this.updateToCart(product)
 	}
 	
@@ -137,7 +148,9 @@ class ShoppingCartScreen extends Component {
 	}	
 	
 	downPcs=(product)=>{
-		console.log(product);
+		if(product.product_pcs<1){
+			return 0
+		}
 		product.product_pcs = product.product_pcs-1
 		product.subtotal_price = product.product_qnty*product.final_sale_price
 		this.setState({
@@ -147,12 +160,12 @@ class ShoppingCartScreen extends Component {
 	}
  
 	updateToCart=(product)=>{
-		//console.log(product);
+		
 		  product = {
 			  ...product,
 			  device_id: this.state.uniqueId
 		  };
-		 
+		  //console.log(product);
 		  fetch(api.apiUrl+"cartupdate",{
 				method: 'POST',
 				headers: {
@@ -162,7 +175,7 @@ class ShoppingCartScreen extends Component {
 				body: JSON.stringify(product)
 			  }).then(response=>response.json()).then(data=>{
 				  
-				  console.log('update cart shopping:::::::', data);
+				  console.log('update cart shoppings:::::::===========', data);
 				  
 				  this.props.getCartList(data.data)
 				  this.setState({
@@ -182,10 +195,10 @@ class ShoppingCartScreen extends Component {
 	renderShoppingCart=()=>{
 		 
 		return this.state.cartList.cart_item && this.state.cartList.cart_item.map((cartitem, index)=>{
-			
+			console.log('cartitem::::::',cartitem);
 			return(
 			
-					<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',paddingTop:5,paddingBottom:5}}>
+					<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',paddingTop:5,paddingBottom:5}} onPress={()=>this.onPressOpenProductDetails(cartitem)}>
 					
 						<Col size={10} style={{justifyContent:'center'}}>
 							<TouchableOpacity onPress={()=>this.removeCartItem(cartitem.id)} style={{justifyContent:'center',textAlign:'center',borderRadius:50,height:25,width:25,backgroundColor:'#d9a',marginLeft:5}} >
@@ -196,7 +209,7 @@ class ShoppingCartScreen extends Component {
 					
 					
 						<Col size={17} style={{justifyContent:'center'}}>
-							<TouchableOpacity onPress={()=>this.onPressOpen(cartitem.id)}>
+							<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(cartitem.product)}>
 								<Image source={{uri:api.apiBaseUrl+cartitem.product.image}} style={{height:40,width:40,marginLeft:5}}/>
 							</TouchableOpacity>
 						</Col>
@@ -204,7 +217,7 @@ class ShoppingCartScreen extends Component {
 						<Col size={83}>
 							<Row>
 								<Col size={90}>
-									<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(cartitem.product_id)}>
+									<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(cartitem.product)}>
 										<Text style={{fontSize:17}}>
 										{cartitem.product.product_title} </Text>
 									</TouchableOpacity>
@@ -216,32 +229,32 @@ class ShoppingCartScreen extends Component {
 							<Row>
 								<Col size={55}>
 									<Row >
-										<Col  size={10} >
-											{	cartitem.discount>0?
-												(<Text style={{textDecorationLine: 'line-through',color:'red'}}>৳{cartitem.sale_price}</Text>):
-												(<Text style={{color:'#109D9D'}}>৳{cartitem.final_sale_price}</Text>)}
-										</Col>
+										 
 										
-										<Col  size={10} >
-											{	cartitem.discount?
-												(<Text style={{color:'#109D9D'}}>৳{cartitem.subtotal_price}</Text>):
-												(<Text style={{color:'#109D9D'}}></Text>)}
+										<Col  size={15} >
+											{	 
+												(<Text style={{color:'#109D9D'}}>৳{cartitem.subtotal_price}</Text>)
+											}
 										</Col>
 									</Row>
 									<Row></Row>
 									
 									{(cartitem.product.show_pcs_box)?
-									(<Row >
-										<Col size={5}  style={{justifyContent:'center'}}>
+									(<Row style={{marginTop:10,marginBottom:5}}>
+										<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
+											<Text style={{textAlign:'center'}}>
 											<Icon name="remove" onPress={()=>{this.downPcs(cartitem)}} style={{fontSize:18}}/>
+											</Text>
 										</Col>
-										<Col size={8} style={{justifyContent:'center'}}>
-											<Text>
-												 {cartitem.product_pcs?cartitem.product_pcs:0} Pic 
+										<Col size={5} style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#fcc'}}>
+											<Text style={{textAlign:'center'}}>
+												 {cartitem.product_pcs?cartitem.product_pcs:0} Pcs 
 											</Text>
 										</Col> 
-										<Col size={10}  style={{justifyContent:'center'}}>
+										<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
+											<Text style={{textAlign:'center'}}>
 											<Icon name="add" onPress={()=>{this.upPcs(cartitem)}} style={{fontSize:18}}/>
+											</Text>
 										</Col>
 									</Row>):(<Text></Text>)}
 									
@@ -307,24 +320,27 @@ class ShoppingCartScreen extends Component {
 					
 					</Row>
 					 
-			
-			
-
 			);
 		});
-		
-		    
-
 	}
 	
 
 	onPressOpenProductDetails=(productid)=>{
-			this.props.navigation.navigate('ProductDetails',{productid});
+		this.props.navigation.navigate('Stack',{screen:'ProductDetails',params:{product:productid}});
 	}
 	
 	onPressOpenLoginCart=()=>{
-			 
-			this.props.navigation.navigate('LoginCart',{device_id:this.state.uniqueID});
+			if(this.state.cartList.cart_item){
+				if(this.props.user && this.props.user.id){
+					this.props.navigation.navigate('CartConfirmed',{});
+				}else{
+					this.props.navigation.navigate('LoginCart',{device_id:this.state.uniqueID});
+				}
+				
+			}else{
+				this.showToast('কার্টে কোন পণ্য যুক্ত করা নেই')
+			}
+			
 	}
   
   openPreviousCart=()=>{
@@ -339,14 +355,14 @@ class ShoppingCartScreen extends Component {
   render() {
     return (
       <Container>
-			<HeaderScreen navigation={this.props.navigation} total_price={this.props.cartList?this.props.cartList.total_final_price:'0.00'}   title={"বাজার/কার্ট লিস্ট"} />
+			<HeaderScreen navigation={this.props.navigation} total_price={this.props.cartList?this.props.cartList.total_final_price:'0.00'}   title={"বাজার লিস্ট"} />
 			<Content style={styles.contentBar}>
 				<Grid>
-					{this.state.cartList?this.renderShoppingCart():(
-						<Row style={{marginTop:100}}>
+					{this.props.cartList?this.renderShoppingCart():(
+						<Row style={{marginTop:150,backgroundColor:'#efa'}}>
 							<Col style={{justifyContent:'center'}}>
 								<Icon name="basket" style={{alignSelf:'center',color:'coral'}}/>
-								<Text style={{textAlign:'center',color:'coral',fontSize:25}}>Cart is empty!</Text>
+								<Text style={{textAlign:'center',color:'coral',fontSize:25}}>কার্টে কোন পণ্য যুক্ত করা নেই!</Text>
 							</Col>
 						</Row>
 					)}		
@@ -360,17 +376,18 @@ class ShoppingCartScreen extends Component {
 				 
 						  <FooterTab>
 							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.openPreviousCart()}}>
-								<Icon name="arrow-back"  style={{color:'#333'}}/>
+								<Icon name="calendar"  style={{color:'#333'}}/>
 							  <Text>
-								আগের তালিকা
+								আগের বাজার
 							  </Text>
 							 
 							</Button>
 							
-							<Button  style={{backgroundColor:'#93FC87'}}>
-							  <Text>TOTAL</Text>
-							  <Text>৳.{this.props.cartList?this.props.cartList.total_final_price:0.00}</Text>
+							<Button  onPress={()=>{this.props.navigation.navigate('Category')}} style={{backgroundColor:'#93FC87'}}>
+							  <Icon name="list" style={{color:'#333'}}/>
+							  <Text>ক্যাটাগরি</Text>
 							</Button>
+							
 							<Button onPress={()=>{this.onPressOpenLoginCart()}} style={{backgroundColor:'#009933',color:'#fff'}}>
 							  <Icon name="basket"/>
 							  <Text  style={{color:'#fff'}}>অর্ডার করুন</Text>
