@@ -3,7 +3,7 @@ import { StyleSheet, Text, Image, View, ImageBackground,
 		 TouchableOpacity, TextInput, ToastAndroid  } from 'react-native';
 import { Container, Header, Content, Button, Footer, FooterTab, Icon } from 'native-base';
 import { Col, Row, Grid } from 'react-native-easy-grid';
- 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import NumericInput from 'react-native-numeric-input'
 import HeaderScreen from './HeaderScreen';
 import * as api from '../services/apiService';
@@ -13,6 +13,7 @@ import * as actions from '../services/actions/actions'
 
 function mapStateToProps(state){
 	return {
+		homepageProductList: state.productReducer.homepageProductList,
 		cartList:state.cartReducer.cartList,
 		user:state.userReducer.user
 	}
@@ -33,7 +34,9 @@ class ShoppingCartScreen extends Component {
 		let uniqueId = DeviceInfo.getUniqueId();
 		 this.state = {
 			  device_id: uniqueId,
-			  cartList: this.props.cartList, 
+			  cartList: '', 
+			  cartListProduct: "", 
+			  productList: '',			  
 			  error: false,
 			  totalSalePrice:0,
 			  totalDiscountPrice:0,
@@ -50,6 +53,7 @@ class ShoppingCartScreen extends Component {
 	 componentDidMount(){
 		  isMount = true
 		  this.getCurrentCartList();
+		  this.cartProductFnd();		
 		}	
 	 componentWillUnMount(){
 		  isMount = false
@@ -62,16 +66,23 @@ class ShoppingCartScreen extends Component {
 		
 	getCurrentCartList = async () => {
        try { 
+				const cartListTmp = await this.getCartData();
+				const total_sale = await this.sumTotal(cartListTmp,'sub_total');
+				await this.setState({
+					   total_final_price: total_sale,
+					   cartList:cartListTmp,
+					  
+				   })	
+					   
 			   const device_id = this.state.device_id;
-			   const response = await fetch(api.apiUrl+"getcurrentcartlist/"+device_id);
-			   if (response.ok) {
-				   const data = await response.json();
-				    
-					   this.setState({
-						   cartList:data
-					   })		   
+			   // const response = await fetch(api.apiUrl+"getcurrentcartlist/"+device_id);
+			   // if (response.ok) {
+				   // const data = await response.json();
+				 
+				await this.props.getCartList(cartListTmp);	
+								   
 				   
-			   } else { this.setState({ error: true }) }
+			   // } else { this.setState({ error: true }) }
 		   } catch (e) { 
 				console.log('error: ',e);
 			}
@@ -92,50 +103,176 @@ class ShoppingCartScreen extends Component {
 		  return [totalSalePr,totalDiscountPr,totalFinalPr];
 		}
 		
+	sumTotal=(data,field)=>{
+				let total=0;
+				data.length && data.map(list=>{
+					total =  total + Number(list[field])
+				})
+				return total;
+	}	
+	
 	removeCartItem=async(cartitemid)=>{
 		if(cartitemid){
-			try { 
-			   const device_id = this.state.device_id;
-			   const response = await fetch(api.apiUrl+"cartremove/"+cartitemid);
-			   if (response.ok) {
-				   const data = await response.json();
+			let cartList = await this.props.cartList
+			let total_sale = 0
+			let cartListTmp = cartList.filter(cart=>{
+				if(cart.product_id!=cartitemid){
+					total_sale = total_sale + cart.sub_total
+					return true
+				}
+			});
+			
+			cartList = cartListTmp
+			console.log('delete cart::::',cartList)
+			
+			 
+			//const total_sale = await this.sumTotal(cartList, 'sub_total');
+			
+			 await this.setState({
+					 cartList:cartList,
+					 total_final_price:total_sale
+				 });
+			await this.props.getCartList(cartList)
+			await this.storeCartData(cartList);
+			
+			// try { 
+			   // const device_id = this.state.device_id;
+			   // const response = await fetch(api.apiUrl+"cartremove/"+cartitemid);
+			   // if (response.ok) {
+				   // const data = await response.json();
 				   
-				  this.props.getCartList(data.data)
-				  this.setState({
-					  cartList: this.props.cartList
-				  })
-				this.showToast("Cart item deleted successfully!");
-			   } else { this.setState({ error: true }) }
-		   } catch (e) { 
-				console.log('error: ',e);
-			}
+				  // this.props.getCartList(data.data)
+				  // this.setState({
+					  // cartList: this.props.cartList
+				  // })
+				// this.showToast("Cart item deleted successfully!");
+			   // } else { this.setState({ error: true }) }
+		   // } catch (e) { 
+				// console.log('error: ',e);
+			// }
 		}
 	}
 	
-	
-	upQnty=(product)=>{
-		
-		product.product_qnty = product.product_qnty+1
-		product.subtotal_price = product.product_qnty*product.final_sale_price
-		this.setState({
-			 product_qnty:this.state.product_qnty+1
+	sumTotal=(data,field)=>{
+		let total=0;
+		data.length && data.map(list=>{
+			total =  total + Number(list[field])
 		})
+		return total;
+	}
+  
+  	getCartData = async () => {
+	  try {
+		const jsonValue = await AsyncStorage.getItem('@cart_key')
+		return jsonValue != null ? JSON.parse(jsonValue) : null;
+	  } catch(e) {
+		console.log(e)
+	  }
+	}
+	
+	storeCartData = async (value) => {
+	  try {
+		const jsonValue = JSON.stringify(value)
+		await AsyncStorage.setItem('@cart_key', jsonValue)
+		return jsonValue;
+	  } catch (e) {
+		console.log(e)
+	  }
+	}
+	
+	upQnty=async(product)=>{
+		//console.log(product)
+		product.product_qnty = product.product_qnty +1;
+		let cartItems = await this.props.cartList;
 		
-		this.updateToCart(product)
+		let productFnd = false
+		let cartTmp = [];
+		cartTmp = cartItems;
+		let cartIndex = cartTmp.findIndex(cart=>{
+			if(cart.product_id==product.id){
+				return true;
+			}
+		});
+		if(cartIndex<0){
+			cartTmp.push({
+							"product_id": product.id, 
+							"product_qnty": 1, 
+							"final_sale_price": product.final_sale_price,
+							"sub_total": product.final_sale_price
+						});
+		}else{
+			cartTmp[cartIndex].product_qnty = cartTmp[cartIndex].product_qnty +1 
+			cartTmp[cartIndex].sub_total = cartTmp[cartIndex].sub_total +product.final_sale_price 
+		}
+		
+		const totalCart = this.state.total_final_price+product.final_sale_price;
+		
+		this.setState({
+			total_final_price:totalCart
+		})
+		console.log('product index:::', cartTmp);
+		
+		this.showToast();
+		this.props.getCartList(cartTmp)
+		await this.storeCartData(cartTmp);
+		
+		return true;
+		
+		// this.updateToCart(product)
 	}	
 	
-	downQnty=(product)=>{
-		product.product_qnty = product.product_qnty-1
-		product.subtotal_price = product.product_qnty*product.final_sale_price
-		this.setState({
-			product_qnty:this.state.product_qnty-1
-		})
+	downQnty=async(product)=>{
 		
+		console.log(product)
 		if(product.product_qnty<1){
-			this.removeCartItem(product.id);
-			return 0
+		  return 0
 		}
-		this.updateToCart(product)
+		//console.log(product)
+		let cartItems = await this.props.cartList;
+		
+		let productFnd = false
+		let cartTmp = [];
+		cartTmp = cartItems;
+		
+		let cartIndex = cartTmp.findIndex(cart=>{
+			if(cart.product_id==product.id){
+				return true;
+			}
+		});
+		if(cartIndex<0){
+			 
+		}else{
+			if(cartTmp[cartIndex].product_qnty==1){
+				cartTmp.splice(cartIndex,1);
+			}else{
+				cartTmp[cartIndex].product_qnty = cartTmp[cartIndex].product_qnty -1 
+				cartTmp[cartIndex].sub_total = cartTmp[cartIndex].sub_total - product.final_sale_price 
+			}
+		}
+		
+		const totalCart = this.state.total_final_price-product.final_sale_price;
+		
+		this.setState({
+			total_final_price:totalCart
+		})
+		console.log('product index:::', cartTmp);
+		
+		this.showToast("Cart updated");
+		this.props.getCartList(cartTmp)
+		await this.storeCartData(cartTmp);
+		
+		return true;
+		// product.product_qnty = product.product_qnty-1
+		// product.subtotal_price = product.product_qnty*product.final_sale_price
+		// this.setState({
+			// product_qnty:this.state.product_qnty-1
+		// })
+		
+		// if(product.product_qnty<1){
+			// this.removeCartItem(product.id);
+			// return 0
+		// }
+		// this.updateToCart(product)
 	}
 	
 	upPcs=(product)=>{
@@ -190,40 +327,72 @@ class ShoppingCartScreen extends Component {
 		 
 	}
    
-   
+	cartProductFnd=async()=>{
+			let cartList = await this.props.cartList
+			let productList = await this.props.homepageProductList
+			
+			// if(cartList){
+				// let cartProduct =  cartList.cart_item.map(cart=>{
+					// let protmp =  productList.filter(pro=>{
+						// if(pro.product_id==cart.id){
+							// return true
+						// }
+					// });
+					// cart= {...cart,product : protmp}
+					// return cart;
+					
+				// });
+				
+			
+				// console.log('shoppig page common product:::::',this.state.cartListProduct);
+				// //return cartProduct;
+			// }
+			
+				 await this.setState({
+					 cartList:cartList,
+					 productList:productList,
+					 totalFinalSalePrice:cartList.total_final_price
+				 });
+
+	}
+	
+	fndProduct=(proid)=>{
+		let prodList =  this.props.homepageProductList
+		return prodList.filter(prod=>{
+			if(prod.id==proid){
+				return true;
+			}
+		})
+	}
 		
 	renderShoppingCart=()=>{
-		 
-		return this.state.cartList.cart_item && this.state.cartList.cart_item.map((cartitem, index)=>{
-			console.log('cartitem::::::',cartitem);
-			return(
-			
-					<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',paddingTop:5,paddingBottom:5}} onPress={()=>this.onPressOpenProductDetails(cartitem)}>
+
+		return this.state.cartList && this.state.cartList.map((cartitem, index)=>{
+			const product = this.fndProduct(cartitem.product_id)[0];
+			return(<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',paddingTop:5,paddingBottom:5}} >
 					
 						<Col size={10} style={{justifyContent:'center'}}>
-							<TouchableOpacity onPress={()=>this.removeCartItem(cartitem.id)} style={{justifyContent:'center',textAlign:'center',borderRadius:50,height:25,width:25,backgroundColor:'#d9a',marginLeft:5}} >
+							<TouchableOpacity onPress={()=>this.removeCartItem(cartitem.product_id)} style={{justifyContent:'center',textAlign:'center',borderRadius:50,height:25,width:25,backgroundColor:'#d9a',marginLeft:5}} >
 								<Icon name="close" color="#c2a" style={{justifyContent:'center',fontSize:15,textAlign:'center'}}  />
 							</TouchableOpacity>
 						</Col>
 						 
-					
-					
 						<Col size={17} style={{justifyContent:'center'}}>
-							<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(cartitem.product)}>
-								<Image source={{uri:api.apiBaseUrl+cartitem.product.image}} style={{height:40,width:40,marginLeft:5}}/>
+							<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product)}>
+								<Image source={{uri:api.apiBaseUrl+product.image}} style={{height:40,width:40,marginLeft:5}}/>
 							</TouchableOpacity>
 						</Col>
 						
 						<Col size={83}>
 							<Row>
 								<Col size={90}>
-									<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(cartitem.product)}>
+									<TouchableOpacity onPress={()=>this.onPressOpenProductDetails(product)}>
 										<Text style={{fontSize:17}}>
-										{cartitem.product.product_title} </Text>
+										{product.product_title} </Text>
 									</TouchableOpacity>
 								</Col>
 								<Col size={15}>
-									<Text  style={{color:'#666'}}>{cartitem.product.unit_type}</Text>
+									<Text  style={{color:'#666'}}>{product.unit_type}</Text>
 								</Col>
 							</Row>
 							<Row>
@@ -233,27 +402,27 @@ class ShoppingCartScreen extends Component {
 										
 										<Col  size={15} >
 											{	 
-												(<Text style={{color:'#109D9D'}}>৳{cartitem.subtotal_price}</Text>)
+												(<Text style={{color:'#109D9D'}}>৳{product.final_sale_price}</Text>)
 											}
 										</Col>
 									</Row>
-									<Row></Row>
+									<Row><Text>{''}</Text></Row>
 									
-									{(cartitem.product.show_pcs_box)?
+									{(product.show_pcs_box)?
 									(<Row style={{marginTop:10,marginBottom:5}}>
 										<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
 											<Text style={{textAlign:'center'}}>
-											<Icon name="remove" onPress={()=>{this.downPcs(cartitem)}} style={{fontSize:18}}/>
+											<Icon name="remove" onPress={()=>{this.downPcs(product)}} style={{fontSize:18}}/>
 											</Text>
 										</Col>
 										<Col size={5} style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#fcc'}}>
 											<Text style={{textAlign:'center'}}>
-												 {cartitem.product_pcs?cartitem.product_pcs:0} Pcs 
+												 {product.product_pcs?product.product_pcs:0} Pcs 
 											</Text>
 										</Col> 
 										<Col size={2}  style={{justifyContent:'center',borderWidth:1,borderRadius:20,backgroundColor:'#afe'}}>
 											<Text style={{textAlign:'center'}}>
-											<Icon name="add" onPress={()=>{this.upPcs(cartitem)}} style={{fontSize:18}}/>
+											<Icon name="add" onPress={()=>{this.upPcs(product)}} style={{fontSize:18}}/>
 											</Text>
 										</Col>
 									</Row>):(<Text></Text>)}
@@ -267,14 +436,14 @@ class ShoppingCartScreen extends Component {
 								
 									<Row>
 										<Col style={{justifyContent:'center'}}>
-											<Icon name="remove" onPress={()=>{this.downQnty(cartitem)}} style={styles.lblItemAttrPcsIcon,{marginLeft:'auto',marginRight:1,fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
+											<Icon name="remove" onPress={()=>{this.downQnty(product)}} style={styles.lblItemAttrPcsIcon,{marginLeft:'auto',marginRight:1,fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
 										</Col>
 										<Col style={{justifyContent:'center'}}>
 											<Text style={{textAlign:'center',borderWidth:1,paddingTop:5,paddingBottom:5,borderColor:'#444',color:'#444',marginLeft:3}}>{cartitem.product_qnty?cartitem.product_qnty:cartitem.product_qnty=1}</Text>
 										</Col>
 										<Col style={{justifyContent:'center'}}>
 											<Icon name="add" 
-												onPress={()=>{this.upQnty(cartitem)}} 
+												onPress={()=>{this.upQnty(product)}} 
 												style={{
 													fontWeight:'bold',
 													borderWidth:1,
@@ -291,36 +460,12 @@ class ShoppingCartScreen extends Component {
 										</Col>
 									</Row>
 								</Col>
-								{/****<Col size={20}>
-									<Row></Row>
-									<Row></Row>
-									<Row></Row>
-									<Row>
-									<Icon name="cart" 
-											onPress={()=>{this.updateToCart(cartitem)}} 
-											style={{
-												fontWeight:'bold',
-												borderWidth:1,
-												textAlign:'center',
-												borderRadius:40,
-												fontSize:16,
-												backgroundColor:'green',
-												borderColor:'green',
-												margin:3,
-												height:30,
-												width:30,
-												paddingTop:7,
-									color:'#fff'}}/>
-									</Row>
-								</Col>***/}
 								 
 							</Row>
 						</Col>
 						
 					
-					</Row>
-					 
-			);
+					</Row>);
 		});
 	}
 	
@@ -330,7 +475,7 @@ class ShoppingCartScreen extends Component {
 	}
 	
 	onPressOpenLoginCart=()=>{
-			if(this.state.cartList.cart_item){
+			if(this.state.cartList){
 				if(this.props.user && this.props.user.id){
 					this.props.navigation.navigate('CartConfirmed',{});
 				}else{
@@ -355,26 +500,30 @@ class ShoppingCartScreen extends Component {
   render() {
     return (
       <Container>
-			<HeaderScreen navigation={this.props.navigation} total_price={this.props.cartList?this.props.cartList.total_final_price:'0.00'}   title={"বাজার লিস্ট"} />
+			<HeaderScreen navigation={this.props.navigation} total_price={this.state.total_final_price?this.state.total_final_price:'0.00'}   title={"বাজার লিস্ট"} />
 			<Content style={styles.contentBar}>
 				<Grid>
-					{this.props.cartList?this.renderShoppingCart():(
-						<Row style={{marginTop:150,backgroundColor:'#efa'}}>
+					{this.state.cartList?this.renderShoppingCart():(<Row style={{marginTop:150,backgroundColor:'#efa'}}>
 							<Col style={{justifyContent:'center'}}>
 								<Icon name="basket" style={{alignSelf:'center',color:'coral'}}/>
 								<Text style={{textAlign:'center',color:'coral',fontSize:25}}>কার্টে কোন পণ্য যুক্ত করা নেই!</Text>
 							</Col>
-						</Row>
-					)}		
+						</Row>)}
 				</Grid>
 	 
 			</Content>
 			
-			<Footer style={{
-				backgroundColor:'#93FC87'
-			}}>
+			<Footer style={{backgroundColor:'#93FC87'}}>
 				 
 						  <FooterTab>
+						  
+							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.props.navigation.navigate('Home')}}>
+								<Icon name="home"  style={{color:'#333'}}/>
+							  <Text>
+								হোম
+							  </Text>
+							</Button>
+							
 							<Button style={{backgroundColor:'#93FC87'}} onPress={()=>{this.openPreviousCart()}}>
 								<Icon name="calendar"  style={{color:'#333'}}/>
 							  <Text>
@@ -383,10 +532,7 @@ class ShoppingCartScreen extends Component {
 							 
 							</Button>
 							
-							<Button  onPress={()=>{this.props.navigation.navigate('Category')}} style={{backgroundColor:'#93FC87'}}>
-							  <Icon name="list" style={{color:'#333'}}/>
-							  <Text>ক্যাটাগরি</Text>
-							</Button>
+							
 							
 							<Button onPress={()=>{this.onPressOpenLoginCart()}} style={{backgroundColor:'#009933',color:'#fff'}}>
 							  <Icon name="basket"/>

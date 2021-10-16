@@ -8,7 +8,7 @@ import { connect, dispatch } from 'react-redux'
 import { apiUrl } from '../services/apiService';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as actions from '../services/actions/actions'
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
  
 function mapDispatchToProps(dispatch){
@@ -93,12 +93,33 @@ class CartConfirmedScreen extends Component {
 	getPaymentMethod=data=>{
 		this.setState({payment_method:data});
 	}
+	
+	
+	getCartData = async () => {
+	  try {
+		const jsonValue = await AsyncStorage.getItem('@cart_key')
+		return jsonValue != null ? JSON.parse(jsonValue) : null;
+	  } catch(e) {
+		console.log(e)
+	  }
+	}
+	
+	storeCartData = async (value) => {
+	  try {
+		const jsonValue = JSON.stringify(value)
+		await AsyncStorage.setItem('@cart_key', jsonValue)
+		return jsonValue;
+	  } catch (e) {
+		console.log(e)
+	  }
+	}
+	
 	  
-	confirmedCarts=()=>{
+	confirmedCarts=async()=>{
 	 
 		  let data = {
 			  device_id:this.state.device_id,
-			  cart_id:this.props.cartList.id,
+			  cart_list:await this.getCartData(),
 			  user_id: this.props.user.id,
 			  house_mess_name:this.state.house_mess_name,
 			  user_full_name:this.state.user_full_name,
@@ -111,8 +132,8 @@ class CartConfirmedScreen extends Component {
 			  delivery_time:this.state.chosenDate
 		  }
 		  
-		  
-		  fetch(apiUrl+"cartconfirm",{
+		 
+		  fetch(apiUrl+"cartconfirm_list",{
 				method: 'POST',
 				headers: {
 				  'Accept': 'application/json',
@@ -125,7 +146,7 @@ class CartConfirmedScreen extends Component {
 				  if(data.status=="success"){
 					//this.props.userLogin(data.user);
 					this.props.getCartList([]);
-					this.props.navigation.navigate('CartSuccess',{orderid:data.data.id});
+					this.props.navigation.navigate('CartSuccess',{orderid:data.orders.id});
 				  }else{
 					  console.log('some thing is wrong with order confirm')
 				  }

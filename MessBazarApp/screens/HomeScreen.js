@@ -11,23 +11,23 @@ import { connect, dispatch } from 'react-redux'
 import SelectDropdown from 'react-native-select-dropdown'
 import DeviceInfo from 'react-native-device-info';
 import * as actions from '../services/actions/actions'
-import RNRestart from 'react-native-restart';
-
+ 
 function mapStateToProps(state){
-	//console.log('map state category: ', state.categoryReducer.categoryList)
-	//console.log('map state product: ', state.productReducer.homepageProductList)
-	
+
 	return {
+		//cartItems: state.cartReducer.cartItems,
+		cartList: state.cartReducer.cartList,
+		cartTotalPrice: state.cartReducer.cartTotalPrice,
 		categoryList: state.categoryReducer.categoryList,
 		homepageProductList: state.productReducer.homepageProductList,
-		cartList: state.cartReducer.cartList,
-		categoryCount: state.categoryReducer.categoryCount,
+		
+		//categoryCount: state.categoryReducer.categoryCount,
 		user: state.userReducer.user,
-		bigopti: state.userReducer.bigopti,
-		offer: state.userReducer.offer,
-		coupon: state.userReducer.coupon,
-		settings: state.userReducer.settings,
-		cartTotalFinalSalePrice:state.cartReducer.cartTotalFinalSalePrice
+		//bigopti: state.userReducer.bigopti,
+		//offer: state.userReducer.offer,
+		//coupon: state.userReducer.coupon,
+		//settings: state.userReducer.settings,
+		//cartTotalFinalSalePrice:state.cartReducer.cartTotalFinalSalePrice
 	}
 }
 
@@ -36,10 +36,12 @@ function mapDispatchToProps(dispatch){
 			getCategoryList:data=>dispatch(actions.getCategoryList(data)),
 			getHomepageProductLists:data=>dispatch(actions.getHomepageProductList(data)),
 			getCartList:data=>dispatch(actions.getCartList(data)),
-			getBigopti:data=>dispatch(actions.getBigopti(data)),
-			getOffer:data=>dispatch(actions.getOffer(data)),
-			getCoupon:data=>dispatch(actions.getCoupon(data)),
-			getSettings:data=>dispatch(actions.getSettings(data)),
+			getCartTotalPrice:data=>dispatch(actions.getCartTotalPrice(data)),
+			getCartItem:data=>dispatch(actions.getCartItem(data)),
+			// getBigopti:data=>dispatch(actions.getBigopti(data)),
+			// getOffer:data=>dispatch(actions.getOffer(data)),
+			// getCoupon:data=>dispatch(actions.getCoupon(data)),
+			// getSettings:data=>dispatch(actions.getSettings(data)),
 			userLogin:data=>dispatch(actions.userLogin(data))
 	}
 }
@@ -52,78 +54,122 @@ class HomeScreen extends Component {
 		super(props);
 		this.drawer = React.createRef();
 		let cateList = this.props.categoryList
+		const prodList = this.props.homepageProductList
+
 		this.state = {
-			  productList: this.props.homepageProductList,
+			  productList: prodList,
 			  categoryList: cateList,  
 			  categoryListTmp: cateList,  
-			  cartList: this.props.cartList && this.props.cartList.cart_item?Object.entries(this.props.cartList.cart_item):[],  
+			  cartList: this.props.cartList,  
 			  error: false,
 			  product_id:'',
 			  product_qnty:'0',
 			  product_pcs:'0',
 			  uniqueId : DeviceInfo.getUniqueId(),
-			  mounted:false
+			  mounted:false,
+			  visible:true,
+			  total_final_price:0,
 		   };
 	  }
 	  
 	componentDidMount(){
+		const totalPrice = this.sumTotal(this.props.cartList,'sub_total');
+		this.setState({
+		  total_final_price:totalPrice
+	   });	
+		console.log('we are here...',totalPrice);
 		  this.getCategoryrList(); 
-		  
-		  this.setState({
-			  cartList: this.props.cartList && this.props.cartList.cart_item?Object.entries(this.props.cartList.cart_item):[],
-			  productList: this.props.homepageProductList
-		  });
-		  
-		  api.getUserData().then(user=>{
-			console.log('home screen user 78::::',user)
-			this.props.userLogin(user)
+		console.log('we are here...80::::',totalPrice);  
+		  // api.getUserData().then(user=>{
+			// console.log('home screen user 78::::',user)
+			// this.props.userLogin(user)
 		
-		}).catch(error=>console.log(error))
+		// }).catch(error=>console.log('homescreen-85::',error))
 		
 		}
 	
 	componentDidUpdate(){
+		// if(!this.state.mounted){
+			// const totalPrice = this.sumTotal(this.props.cartList,'sub_total');
+			// this.setState({
+			  // total_final_price:totalPrice,
+			  // mounted:true
+		   // });				
+		// }
+
+	   
 		// if(!this.state.mounted && this.props.cartList && this.props.cartList.cart_item){
 			// this.setState({
 				// mounted:true,
 				// cartList: this.props.cartList.cart_item?Object.entries(this.props.cartList.cart_item):[],  
 			// })
 		// } 
+
 		
 	}
-	getCategoryrList = async () => {
+	getCategoryrList=async()=> {
        try { 
 	   //console.log(api.apiUrl+"category/list");
-			   const response = await fetch(api.apiUrl+"category/list/"+this.state.uniqueId);
-			   if (response.ok) {
-				   const data = await response.json();
+	   
+				// const cartListTmp = await this.getCartData();  
+				// if(cartListTmp){
+					// const totalPrice = await this.sumTotal(cartListTmp,'sub_total');
+					// this.setState({
+					  // total_final_price:totalPrice
+					// });	
+					
+					// if(cartListTmp){
+						// await this.props.getCartList(cartListTmp);
+					// }
+				// }
+			   
+			  
+			   fetch(api.apiUrl+"homepage/123").then(data=>data.json()).then(response=>{
+				   //console.log('homescreen-123:-',response)
+				   const data = response;
 				   if(data.product_list){
-					   //console.log('homepage response datas: ',data.product_list);
+					   //console.log('homepage response datas-130: ',data.product_list);
+					   this.props.getHomepageProductLists(data.product_list);
 				   }
+				   if(data.category_list){
+					   this.props.getCategoryList(data.category_list);
+					   console.log('homescreen product list-134::',data.category_list);
+				   }	   
+				  
+  			 
+				   // this.props.getBigopti(data.bigopti);
+				   // this.props.getOffer(data.offer);
+				   // this.props.getCoupon(data.coupon);
+				   //this.props.getSettings(data.settings);
+				   //const totalPrice = this.sumTotal(cartListTmp,'final_sale_price');
 				   
-				   this.props.getCategoryList(data.category_list);
-				   this.props.getHomepageProductLists(data.product_list);
-				   this.props.getCartList(data.cart_list);
-				   this.props.getBigopti(data.bigopti);
-				   this.props.getOffer(data.offer);
-				   this.props.getCoupon(data.coupon);
-				   this.props.getSettings(data.settings);
-				    this.setState({
-					  productList: data.product_list
-				   });		
-				 		   
-			   } else { this.setState({ error: true }) }
+				   //await this.props.getCartTotalPrice(totalPrice);
+				   
+				}).catch(e=>{
+						console.log('error-144: ',e)
+						if(e.TypeError=="Network request failed"){
+							this.showToast('Internet Connection Has Problem');
+						}
+					});
+			   
+			   
 		   } catch (e) { 
-				console.log('error: ',e);
+				console.log('error-151: ',e);
 			}
 	  }
 	  
  
-	  
+	sumTotal=(data,field)=>{
+		let total=0;
+		data.map(list=>{
+			total =  total + Number(list[field])
+		})
+		return total;
+	}
 
 	renderCategory=()=>{
 		//console.log('render category: ', this.props.categoryList);
-		return this.props.categoryList.slice(0, 5).map((category, index)=>{
+		return this.props.categoryList && this.props.categoryList.slice(0, 5).map((category, index)=>{
 			 
 			return(
 				<TouchableOpacity key={index} style={{width:'30%',margin:5}} onPress={()=>this.onPressOpen(category.id)} >
@@ -180,8 +226,8 @@ class HomeScreen extends Component {
   
   
     
-   filterHomepageProduct=(txt)=>{
-	let productList =  this.props.homepageProductList;
+   filterHomepageProduct=async(txt)=>{
+	let productList =  await this.props.homepageProductList;
 	 
 	let productListTmp =  [];
 	let txtSearch = '';
@@ -204,24 +250,84 @@ class HomeScreen extends Component {
   }
   
   
-	upQnty=(product)=>{
-		//console.log(product);
-		product.product_qnty = product.product_qnty+1
+  
+  	getCartData = async () => {
+	  try {
+		const jsonValue = await AsyncStorage.getItem('@cart_key')
+		return jsonValue != null ? JSON.parse(jsonValue) : null;
+	  } catch(e) {
+		console.log('No cart data found::::-',e)
+	  }
+	}
+	
+	storeCartData = async (value) => {
+	  try {
+		const jsonValue = JSON.stringify(value)
+		await AsyncStorage.setItem('@cart_key', jsonValue)
+		return jsonValue;
+	  } catch (e) {
+		console.log(e)
+	  }
+	}
+	
+  
+	 upQnty=async(product)=>{
+		console.log('step one: ....',product)
+		product.product_qnty = product.product_qnty +1;
+		const totalCart = this.state.total_final_price+product.final_sale_price;
 		this.setState({
-			 product_qnty:this.state.product_qnty+1
+			total_final_price:totalCart
 		})
-		this.addToCart(product);
+		//let cartItems = await this.props.cartList;
+		//let cartItems = await this.getCartData();
+		console.log('step two: ....',product)
+	 
+		 
+		return true;
+		
 	}	
 	
-	downQnty=(product)=>{
+	downQnty=async(product)=>{
+		console.log(product)
 		if(product.product_qnty<1){
-			return 0
+		  return 0
 		}
-		product.product_qnty = product.product_qnty-1
+		product.product_qnty = product.product_qnty - 1;
+		//console.log(product)
+		let cartItems = await this.props.cartList;
+		
+		let productFnd = false
+		let cartTmp = [];
+		cartTmp = cartItems;
+		
+		let cartIndex = cartTmp.findIndex(cart=>{
+			if(cart.product_id==product.id){
+				return true;
+			}
+		});
+		if(cartIndex<0){
+			 
+		}else{
+			if(cartTmp[cartIndex].product_qnty==1){
+				cartTmp.splice(cartIndex,1);
+			}else{
+				cartTmp[cartIndex].product_qnty = cartTmp[cartIndex].product_qnty -1 
+				cartTmp[cartIndex].sub_total = cartTmp[cartIndex].sub_total - product.final_sale_price 
+			}
+		}
+		
+		const totalCart = this.state.total_final_price-product.final_sale_price;
+		
 		this.setState({
-			product_qnty:this.state.product_qnty-1
+			total_final_price:totalCart
 		})
-		this.addToCart(product);
+		console.log('product index:::', cartTmp);
+		
+		this.showToast();
+		 
+		await this.storeCartData(cartTmp);
+		
+		return true;
 	}
 	
 	upPcs=(product)=>{
@@ -275,20 +381,46 @@ class HomeScreen extends Component {
 	};
 	
 	renderCartList=(product)=>{
-		product.product_qnty = 0
-		return this.props.cartList && this.props.cartList.cart_item && Object.entries(this.props.cartList.cart_item).map(cart=>{
-			if(product.id==cart[1].product_id)
-			{
-				product.product_qnty = cart[1].product_qnty;
-				return 
-			} else{
-				//product.product_qnty = 0
-				return 
-			}
-			 
-		})
+		// product.product_qnty = 0
+		// const cartList = this.props.cartList
+		
+		// if(cartList.length){
+			// console.log('cart list 1:::',cartList.length)
+		// }else{
+			// console.log('cart list 0:::',cartList.length)
+		// }
+		
+		// if(cartList){
+			 // cartList.filter(cart=>{
+				 
+				// if(product.id==cart.product_id)
+				// {
+					// product.product_qnty = cart.product_qnty;
+					// return true
+					// //return cart.product_qnty; 
+				// }  
+			// })
+		// }
+		return true;
 	}
 	
+	cartListTmp=async()=>{
+		let cartList = await this.props.cartList
+		let productList = this.state.productList
+		if(cartList){
+			let cartProduct =  cartList.map(cart=>{
+				let protmp =  productList.filter(pro=>{
+					if(pro.product_id==cart.id){
+						return true
+					}
+				});
+				return protmp;
+				
+			});
+			console.log('homepage common product:::::',cartProduct);
+		}
+		
+	}
 	getData = async () => {
 	  try {
 		const jsonValue = await AsyncStorage.getItem('@user')
@@ -301,8 +433,8 @@ class HomeScreen extends Component {
 	
   	renderProduct=()=>{
  
-		return this.state.productList.map((product, index)=>{
-			 
+		return this.props.homepageProductList.map((product, index)=>{
+			
 			return(
 				<Row key={index} style={{borderBottomWidth:1,borderColor:'#ccc',backgroundColor:'#efe',paddingTop:5,paddingBottom:5}}>
 						<Col size={17} style={{justifyContent:'center'}}>
@@ -315,8 +447,8 @@ class HomeScreen extends Component {
 							</TouchableOpacity>
 						</Col>
 						
-						<Col size={1}>
-							<Text>{this.renderCartList(product)}</Text>
+						<Col size={2}>
+							<Text>{}</Text>
 						</Col>
 						
 						<Col size={83}>
@@ -373,14 +505,24 @@ class HomeScreen extends Component {
 								<Col size={47} style={{justifyContent:'center'}}>
 									<Row>
 										<Col style={{justifyContent:'center'}}>
-											{product.product_qnty?(<Icon name="remove" onPress={()=>{this.downQnty(product)}} 
-												style={styles.lblItemAttrPcsIcon,{marginLeft:'auto',marginRight:3,fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>):(<Text></Text>)}			
+											{product.product_qnty?(<TouchableOpacity onPress={()=>{this.downQnty(product)}} ><Icon name="remove" onPress={()=>{this.downQnty(product)}} 
+												style={styles.lblItemAttrPcsIcon,{marginLeft:'auto',marginRight:3,fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/></TouchableOpacity>):(<Text></Text>)}			
 										</Col>
 										<Col style={{justifyContent:'center'}}>
-											{product.product_qnty?(<Text style={{textAlign:'center',borderWidth:1,paddingTop:5,paddingBottom:5,borderColor:'#444',color:'#444'}}>{product.product_qnty?product.product_qnty:product.product_qnty=0}</Text>):(<Text></Text>)}						
+												{product.product_qnty?
+												(<Text style={{textAlign:'center',
+												borderWidth:1,
+												paddingTop:5,
+												paddingBottom:5,
+												borderColor:'#444',
+												color:'#444'}}>
+												{product.product_qnty}
+											</Text>):(<Text></Text>)}						
 										</Col>
 										<Col style={{justifyContent:'center'}}>
-											<Icon name="add" onPress={()=>{this.upQnty(product)}} style={styles.lblItemAttrPcsIcon,{fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
+											<TouchableOpacity onPress={()=>this.upQnty(product)} >
+												<Icon name="add" onPress={()=>{this.upQnty(product)}} style={styles.lblItemAttrPcsIcon,{fontWeight:'bold',borderWidth:1,textAlign:'center',borderRadius:40,fontSize:16,backgroundColor:'#F1F1F1',borderColor:'red',margin:3,height:30,width:30,paddingTop:7,color:'red'}}/>
+											</TouchableOpacity>
 										</Col>
 									</Row>
 								</Col>	 
@@ -395,9 +537,10 @@ class HomeScreen extends Component {
 	
   
   render=()=>{
+	
     return (
 		<Container>
-		  <HeaderScreen navigation={this.props.navigation} total_price={this.props.cartList?this.props.cartList.total_final_price:'0.00'} title={"মেস বাজার"} />
+		  <HeaderScreen navigation={this.props.navigation} total_price={this.state.total_final_price} title={"মেস বাজার"} />
 		  <Content>
 				<Grid>
 					<Row style={{marginTop:5,marginBottom:5}}>

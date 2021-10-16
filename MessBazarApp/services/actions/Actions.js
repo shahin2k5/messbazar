@@ -32,6 +32,20 @@ export function getCartList(payload){
 	}
 }
 
+export function getCartItem(payload){
+	return {
+		type: types.GET_CART_ITEM,	
+		payload
+	}
+}
+
+export function getCartTotalPrice(payload){
+	return {
+		type: types.GET_CART_TOTAL_PRICE,	
+		payload
+	}
+}
+
 export function getBigopti(payload){
 	return {
 		type: types.GET_BIGOPTI,	

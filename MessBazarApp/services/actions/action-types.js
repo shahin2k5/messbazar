@@ -7,3 +7,4 @@ export const GET_BIGOPTI = "GET_BIGOPTI";
 export const GET_OFFER = "GET_OFFER";
 export const GET_COUPON = "GET_COUPON";
 export const GET_SETTINGS = "GET_SETTINGS";
+export const GET_CART_TOTAL_PRICE = "GET_CART_TOTAL_PRICE";

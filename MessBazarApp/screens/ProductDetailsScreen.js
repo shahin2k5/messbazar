@@ -7,7 +7,7 @@ import HeaderScreen from './HeaderScreen';
 import DeviceInfo from 'react-native-device-info';
 import { connect, dispatch } from 'react-redux'
 import * as actions from '../services/actions/actions'
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function mapStateToProps(state){
 	//console.log(' map state cartList',state.cartReducer.cartList);
@@ -42,7 +42,7 @@ class ProductDetailsScreen extends Component {
 	  }
 	  
 	 componentDidMount=()=>{
-		  //this.getProductDetails();
+		  this.getProductDetails();
 		}	
 
 	componentDidAppear = () => {
@@ -57,22 +57,56 @@ class ProductDetailsScreen extends Component {
 		
 		
 	getProductDetails = async () => {
-       try { 
-			   const productid = this.state.productid;
-			   const response = await fetch(api.apiUrl+"productdetails/"+productid+"/"+this.state.uniqueId);
-			   if (response.ok) {
-				   const data = await response.json();
-				   this.props.getCartList(data.carts)
-				   this.setState({
-					   productDetails:data.products
-				   })		   
-			   } else { this.setState({ error: true }) }
-		   } catch (e) { 
-				console.log('error: ',e);
-			}
+		
+		 const cartListTmp = await this.props.cartList;  
+			   const totalPrice = await this.sumTotal(cartListTmp,'sub_total');
+			  
+				this.setState({
+				  total_final_price:totalPrice
+			   });	
+			   
+       // try { 
+			   // const productid = this.state.productid;
+			   // const response = await fetch(api.apiUrl+"productdetails/"+productid+"/"+this.state.uniqueId);
+			   // if (response.ok) {
+				   // const data = await response.json();
+				   // this.props.getCartList(data.carts)
+				   // this.setState({
+					   // productDetails:data.products
+				   // })		   
+			   // } else { this.setState({ error: true }) }
+		   // } catch (e) { 
+				// console.log('error: ',e);
+			// }
 	 }
 	  
-	  
+ 	sumTotal=(data,field)=>{
+		let total=0;
+		data.length && data.map(list=>{
+			total =  total + Number(list[field])
+		})
+		return total;
+	}
+  
+  	getCartData = async () => {
+	  try {
+		const jsonValue = await AsyncStorage.getItem('@cart_key')
+		return jsonValue != null ? JSON.parse(jsonValue) : null;
+	  } catch(e) {
+		console.log(e)
+	  }
+	}
+	
+	storeCartData = async (value) => {
+	  try {
+		const jsonValue = JSON.stringify(value)
+		await AsyncStorage.setItem('@cart_key', jsonValue)
+		return jsonValue;
+	  } catch (e) {
+		console.log(e)
+	  }
+	}
+	
 	onPressCartAdd=(product)=>{
 	 
 		if(product.product_qnty<1){
@@ -108,25 +142,95 @@ class ProductDetailsScreen extends Component {
 		 
 	}
 		  	
-	upQnty=(product)=>{
-		//console.log(product);
-		product.product_qnty = product.product_qnty+1
+	upQnty=async(product)=>{
+		//console.log(product)
+		product.product_qnty = product.product_qnty +1;
+		let cartItems = await this.props.cartList;
+		
+		let productFnd = false
+		let cartTmp = [];
+		cartTmp = cartItems;
+		let cartIndex = cartTmp.findIndex(cart=>{
+			if(cart.product_id==product.id){
+				return true;
+			}
+		});
+		if(cartIndex<0){
+			cartTmp.push({
+							"product_id": product.id, 
+							"product_qnty": 1, 
+							"final_sale_price": product.final_sale_price,
+							"sub_total": product.final_sale_price
+						});
+		}else{
+			cartTmp[cartIndex].product_qnty = cartTmp[cartIndex].product_qnty +1 
+			cartTmp[cartIndex].sub_total = cartTmp[cartIndex].sub_total +product.final_sale_price 
+		}
+		
+		const totalCart = this.state.total_final_price+product.final_sale_price;
+		
 		this.setState({
-			 product_qnty:this.state.product_qnty+1
+			total_final_price:totalCart
 		})
-		this.addToCart(product);
+		console.log('product index:::', cartTmp);
+		
+		this.showToast();
+		this.props.getCartList(cartTmp)
+		await this.storeCartData(cartTmp);
+		
+		return true;
 	}	
 	
-	downQnty=(product)=>{
+	downQnty=async(product)=>{
 		 
+		console.log(product)
 		if(product.product_qnty<1){
-			return 0
+		  return 0
 		}
-		product.product_qnty = product.product_qnty-1
+		product.product_qnty = product.product_qnty - 1
+		//console.log(product)
+		let cartItems = await this.props.cartList;
+		let productFnd = false
+		let cartTmp = [];
+		cartTmp = cartItems;
+		
+		let cartIndex = cartTmp.findIndex(cart=>{
+			if(cart.product_id==product.id){
+				return true;
+			}
+		});
+		if(cartIndex<0){
+			 
+		}else{
+			if(cartTmp[cartIndex].product_qnty==1){
+				cartTmp.splice(cartIndex,1);
+			}else{
+				cartTmp[cartIndex].product_qnty = cartTmp[cartIndex].product_qnty -1 
+				cartTmp[cartIndex].sub_total = cartTmp[cartIndex].sub_total - product.final_sale_price 
+			}
+		}
+		
+		const totalCart = this.state.total_final_price-product.final_sale_price;
+		
 		this.setState({
-			product_qnty:this.state.product_qnty-1
+			total_final_price:totalCart
 		})
-		this.addToCart(product);
+		console.log('product index:::', cartTmp);
+		
+		this.showToast();
+		this.props.getCartList(cartTmp)
+		await this.storeCartData(cartTmp);
+		
+		return true;
+		// //console.log(product);
+		// if(product.product_qnty<1){
+			// return 0
+		// }
+		// product.product_qnty = product.product_qnty-1
+		// this.setState({
+			// product_qnty:this.state.product_qnty-1
+		// })
+		// this.addToCart(product);
 	}
 	
 	upPcs=(product)=>{
@@ -206,6 +310,21 @@ class ProductDetailsScreen extends Component {
 		//this.props.navigation.navigate('Stack',{screen:'ProductDetails',params:{product:product}});
 	}
 
+
+	renderCartList=(product)=>{
+		product.product_qnty = 0
+		const cartList = this.props.cartList
+		
+		 cartList.filter(cart=>{
+			 
+			if(product.id==cart.product_id)
+			{
+				product.product_qnty = cart.product_qnty;
+				//return cart.product_qnty; 
+			}  
+		})
+	}
+	
  
 	 renderProduct=()=>{
 			return this.state.productList.map((product, index)=>{
@@ -221,7 +340,9 @@ class ProductDetailsScreen extends Component {
 									}}/>
 								</TouchableOpacity>
 							</Col>
-							
+							<Col size={2}>
+								<Text>{this.renderCartList(product)}</Text>
+							</Col>
 							<Col size={83}>
 								<Row>
 									<Col size={90}>
@@ -304,7 +425,7 @@ class ProductDetailsScreen extends Component {
   render() {
     return (
       <Container>
-			<HeaderScreen navigation={this.props.navigation}  total_price={this.props.cartList?this.props.cartList.total_final_price:'0.00'} title={"পণ্যের বিবরণ"} />
+			<HeaderScreen navigation={this.props.navigation}  total_price={this.state.total_final_price?this.state.total_final_price:'0.00'} title={"পণ্যের বিবরণ"} />
 			<Content style={styles.maincontent}>
 				<Grid>
 					 
